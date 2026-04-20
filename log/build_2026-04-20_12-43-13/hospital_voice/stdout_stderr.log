@@ -1,0 +1,35 @@
+running egg_info
+creating ../../build/hospital_voice/hospital_voice.egg-info
+writing ../../build/hospital_voice/hospital_voice.egg-info/PKG-INFO
+writing dependency_links to ../../build/hospital_voice/hospital_voice.egg-info/dependency_links.txt
+writing entry points to ../../build/hospital_voice/hospital_voice.egg-info/entry_points.txt
+writing requirements to ../../build/hospital_voice/hospital_voice.egg-info/requires.txt
+writing top-level names to ../../build/hospital_voice/hospital_voice.egg-info/top_level.txt
+writing manifest file '../../build/hospital_voice/hospital_voice.egg-info/SOURCES.txt'
+reading manifest file '../../build/hospital_voice/hospital_voice.egg-info/SOURCES.txt'
+writing manifest file '../../build/hospital_voice/hospital_voice.egg-info/SOURCES.txt'
+running build
+running build_py
+creating /home/ubuntu/hospital-robot-ROS2/build/hospital_voice/build
+creating /home/ubuntu/hospital-robot-ROS2/build/hospital_voice/build/lib
+creating /home/ubuntu/hospital-robot-ROS2/build/hospital_voice/build/lib/hospital_voice
+copying hospital_voice/__init__.py -> /home/ubuntu/hospital-robot-ROS2/build/hospital_voice/build/lib/hospital_voice
+copying hospital_voice/whisper_node.py -> /home/ubuntu/hospital-robot-ROS2/build/hospital_voice/build/lib/hospital_voice
+running install
+running install_lib
+creating /home/ubuntu/hospital-robot-ROS2/install/hospital_voice/lib/python3.10/site-packages/hospital_voice
+copying /home/ubuntu/hospital-robot-ROS2/build/hospital_voice/build/lib/hospital_voice/__init__.py -> /home/ubuntu/hospital-robot-ROS2/install/hospital_voice/lib/python3.10/site-packages/hospital_voice
+copying /home/ubuntu/hospital-robot-ROS2/build/hospital_voice/build/lib/hospital_voice/whisper_node.py -> /home/ubuntu/hospital-robot-ROS2/install/hospital_voice/lib/python3.10/site-packages/hospital_voice
+byte-compiling /home/ubuntu/hospital-robot-ROS2/install/hospital_voice/lib/python3.10/site-packages/hospital_voice/__init__.py to __init__.cpython-310.pyc
+byte-compiling /home/ubuntu/hospital-robot-ROS2/install/hospital_voice/lib/python3.10/site-packages/hospital_voice/whisper_node.py to whisper_node.cpython-310.pyc
+running install_data
+creating /home/ubuntu/hospital-robot-ROS2/install/hospital_voice/share/ament_index
+creating /home/ubuntu/hospital-robot-ROS2/install/hospital_voice/share/ament_index/resource_index
+creating /home/ubuntu/hospital-robot-ROS2/install/hospital_voice/share/ament_index/resource_index/packages
+copying resource/hospital_voice -> /home/ubuntu/hospital-robot-ROS2/install/hospital_voice/share/ament_index/resource_index/packages
+copying package.xml -> /home/ubuntu/hospital-robot-ROS2/install/hospital_voice/share/hospital_voice
+running install_egg_info
+Copying ../../build/hospital_voice/hospital_voice.egg-info to /home/ubuntu/hospital-robot-ROS2/install/hospital_voice/lib/python3.10/site-packages/hospital_voice-0.0.0-py3.10.egg-info
+running install_scripts
+Installing whisper_node script to /home/ubuntu/hospital-robot-ROS2/install/hospital_voice/lib/hospital_voice
+writing list of installed files to '/home/ubuntu/hospital-robot-ROS2/build/hospital_voice/install.log'

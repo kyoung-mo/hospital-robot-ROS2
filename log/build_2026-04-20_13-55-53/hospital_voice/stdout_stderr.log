@@ -1,0 +1,28 @@
+running egg_info
+writing ../../build/hospital_voice/hospital_voice.egg-info/PKG-INFO
+writing dependency_links to ../../build/hospital_voice/hospital_voice.egg-info/dependency_links.txt
+writing entry points to ../../build/hospital_voice/hospital_voice.egg-info/entry_points.txt
+writing requirements to ../../build/hospital_voice/hospital_voice.egg-info/requires.txt
+writing top-level names to ../../build/hospital_voice/hospital_voice.egg-info/top_level.txt
+reading manifest file '../../build/hospital_voice/hospital_voice.egg-info/SOURCES.txt'
+writing manifest file '../../build/hospital_voice/hospital_voice.egg-info/SOURCES.txt'
+running build
+running build_py
+copying hospital_voice/tts_node.py -> /home/ubuntu/hospital-robot-ROS2/build/hospital_voice/build/lib/hospital_voice
+running install
+running install_lib
+copying /home/ubuntu/hospital-robot-ROS2/build/hospital_voice/build/lib/hospital_voice/tts_node.py -> /home/ubuntu/hospital-robot-ROS2/install/hospital_voice/lib/python3.10/site-packages/hospital_voice
+byte-compiling /home/ubuntu/hospital-robot-ROS2/install/hospital_voice/lib/python3.10/site-packages/hospital_voice/tts_node.py to tts_node.cpython-310.pyc
+running install_data
+running install_egg_info
+  File "/home/ubuntu/hospital-robot-ROS2/install/hospital_voice/lib/python3.10/site-packages/hospital_voice/tts_node.py", line 3
+    from std_msgs.msg impoty String, ByteMultiArray
+                      ^^^^^^
+SyntaxError: invalid syntax
+
+removing '/home/ubuntu/hospital-robot-ROS2/install/hospital_voice/lib/python3.10/site-packages/hospital_voice-0.0.0-py3.10.egg-info' (and everything under it)
+Copying ../../build/hospital_voice/hospital_voice.egg-info to /home/ubuntu/hospital-robot-ROS2/install/hospital_voice/lib/python3.10/site-packages/hospital_voice-0.0.0-py3.10.egg-info
+running install_scripts
+Installing tts_node script to /home/ubuntu/hospital-robot-ROS2/install/hospital_voice/lib/hospital_voice
+Installing whisper_node script to /home/ubuntu/hospital-robot-ROS2/install/hospital_voice/lib/hospital_voice
+writing list of installed files to '/home/ubuntu/hospital-robot-ROS2/build/hospital_voice/install.log'
