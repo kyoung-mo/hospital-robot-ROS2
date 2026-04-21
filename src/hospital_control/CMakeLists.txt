@@ -36,6 +36,14 @@ if(BUILD_TESTING)
   ament_lint_auto_find_test_dependencies()
 endif()
 
+install(DIRECTORY
+  launch
+  param
+  map
+  rviz
+  DESTINATION share/${PROJECT_NAME}
+)
+
 install(TARGETS
   hospital_task_manager
   DESTINATION lib/${PROJECT_NAME}

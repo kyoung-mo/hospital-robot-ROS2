@@ -75,10 +75,17 @@ std::string HospitalTaskManager::select_best_robot(std::string room_id, bool is_
 
 // 낙상 확정(YOLO/긴급버튼) 처리
 void HospitalTaskManager::emergency_callback(const std_msgs::msg::String::SharedPtr msg) {
-    std::string room_id = msg->data;
-    RCLCPP_ERROR(this->get_logger(), "🚨 EMERGENCY CONFIRMED: %s", room_id.c_str());
-    std::string target_robot = select_best_robot(room_id, true);
-    send_nav_goal(target_robot, room_id, true);
+    if (last_emergency_room == msg->data && fleet_status_["robot_1"].is_busy) return;
+
+    last_emergency_room = msg->data;
+    RCLCPP_ERROR(this->get_logger(), "🚨 EMERGENCY CONFIRMED: %s", last_emergency_room.c_str());
+    
+    if (msg->data == current_r1_location && robot1_is_interacting) {
+        send_nav_goal("robot_2", msg->data, true);
+    } else {
+        std::string target_robot = select_best_robot(msg->data, true);
+        send_nav_goal(target_robot, msg->data, true);
+    }
 
     // LED, 사이렌 이벤트 발행
     auto msg_led = std_msgs::msg::String();
@@ -123,6 +130,8 @@ void HospitalTaskManager::medicine_callback(const std_msgs::msg::String::SharedP
 }
 
 void HospitalTaskManager::patrol_scheduler() {
+    auto now = std::chrono::steady_clock::now();
+    if (now - last_patrol_time < std::chrono::seconds(10)) return; // 10초 경과 확
     if (fleet_status_["robot_1"].is_busy || fleet_status_["robot_2"].is_busy) return;
 
     std::string patrol_robot = (fleet_status_["robot_1"].battery_level >= fleet_status_["robot_2"].battery_level) ? "robot_1" : "robot_2"; 
@@ -163,9 +172,16 @@ void HospitalTaskManager::send_nav_goal(std::string robot_id, std::string room_i
 void HospitalTaskManager::nav_result_callback(const GoalHandleNav::WrappedResult & result, std::string robot_id, std::string room_id) {
     fleet_status_[robot_id].is_busy = false;
     if (result.code == rclcpp_action::ResultCode::SUCCEEDED) {
+        if (robot_id == "robot_1") {
+            current_r1_location = room_id;    // 터틀봇1 위치 기록 [cite: 176]
+            robot1_is_interacting = true;     // 음성 인터랙션 시작 상태로 변경 [cite: 170]
+        }
         auto tts_msg = std_msgs::msg::String();
         tts_msg.data = room_id; // 어느 방에서 음성 안내를 할지 전달
-        tts_trigger->publish(tts_msg); 
+        tts_trigger->publish(tts_msg);
+
+        // 순찰 완료 시점 기록 (10초 대기 타이머용) 
+        last_patrol_time = std::chrono::steady_clock::now();
     }
 }
 

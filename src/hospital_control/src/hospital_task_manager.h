@@ -37,6 +37,12 @@ private:
     void send_nav_goal(std::string robot_id, std::string room_id, bool is_emergency);
     void patrol_scheduler(); // 배터리 기반 순찰 로봇 선정 로직
 
+    std::string current_r1_location = "IDLE"; // 터틀봇1의 현재 위치 방 ID
+    bool robot1_is_interacting = false;       // 터틀봇1이 병실에서 STT/TTS 중인지 여부 [cite: 170]
+    std::string last_emergency_room = "";     // 비전 팀의 중복 신호 필터링용 변수
+
+    std::chrono::steady_clock::time_point last_patrol_time;
+
     // 콜백 함수 
     void emergency_callback(const std_msgs::msg::String::SharedPtr msg); // 낙상 확정/긴급 버튼 [cite: 111, 113]
     void suspected_callback(const std_msgs::msg::String::SharedPtr msg); // 낙상 의심 (D435) [cite: 111, 113]
