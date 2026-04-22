@@ -19,21 +19,21 @@ HospitalTaskManager::HospitalTaskManager() : Node("hospital_task_manager") {
 
     // 터틀봇 위치 구독
     r1_pose_sub_ = this->create_subscription<geometry_msgs::msg::PoseWithCovarianceStamped>(
-        "/robot_1/amcl_pose", 10, [this](const geometry_msgs::msg::PoseWithCovarianceStamped::SharedPtr msg) {
+        "/amcl_pose", 10, [this](const geometry_msgs::msg::PoseWithCovarianceStamped::SharedPtr msg) {
             r1_pose_ = msg->pose.pose;
         });
     r2_pose_sub_ = this->create_subscription<geometry_msgs::msg::PoseWithCovarianceStamped>(
-        "/robot_2/amcl_pose", 10, [this](const geometry_msgs::msg::PoseWithCovarianceStamped::SharedPtr msg) {
+        "/amcl_pose", 10, [this](const geometry_msgs::msg::PoseWithCovarianceStamped::SharedPtr msg) {
             r2_pose_ = msg->pose.pose;
         });
 
     // 터틀봇 배터리 상태 구독
     r1_battery_sub_ = this->create_subscription<sensor_msgs::msg::BatteryState>(
-        "/robot_1/battery_state", 10, [this](const sensor_msgs::msg::BatteryState::SharedPtr msg) { 
+        "/battery_state", 10, [this](const sensor_msgs::msg::BatteryState::SharedPtr msg) { 
             this->fleet_status_["robot_1"].battery_level = msg->percentage; 
         });
     r2_battery_sub_ = this->create_subscription<sensor_msgs::msg::BatteryState>(
-        "/robot_2/battery_state", 10, [this](const sensor_msgs::msg::BatteryState::SharedPtr msg) {
+        "/battery_state", 10, [this](const sensor_msgs::msg::BatteryState::SharedPtr msg) {
              this->fleet_status_["robot_2"].battery_level = msg->percentage; 
         });
 
@@ -42,8 +42,8 @@ HospitalTaskManager::HospitalTaskManager() : Node("hospital_task_manager") {
     emergency_event = this->create_publisher<std_msgs::msg::String>("/hospital/emergency_event", 10);
 
 // 3. 액션 클라이언트 및 타이머
-    r1_nav_client_ = rclcpp_action::create_client<NavigateToPose>(this, "/robot_1/navigate_to_pose");
-    r2_nav_client_ = rclcpp_action::create_client<NavigateToPose>(this, "/robot_2/navigate_to_pose");
+    r1_nav_client_ = rclcpp_action::create_client<NavigateToPose>(this, "/navigate_to_pose");
+    r2_nav_client_ = rclcpp_action::create_client<NavigateToPose>(this, "/navigate_to_pose");
     patrol_timer_ = this->create_wall_timer(std::chrono::seconds(10), std::bind(&HospitalTaskManager::patrol_scheduler, this));
 
     room_map_["START"] = {0.01, 0.01, 1.0};
