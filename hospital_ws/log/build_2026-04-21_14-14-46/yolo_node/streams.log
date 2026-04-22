@@ -1,0 +1,36 @@
+[0.640s] Invoking command in '/home/hospital/hospital_ws/build/yolo_node': PYTHONPATH=/home/hospital/hospital_ws/build/yolo_node/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/hospital/hospital_ws/install/yolo_node/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --uninstall --editable --build-directory /home/hospital/hospital_ws/build/yolo_node/build
+[0.794s] running develop
+[0.877s] Removing /home/hospital/hospital_ws/install/yolo_node/lib/python3.10/site-packages/yolo-node.egg-link (link to .)
+[0.901s] Invoked command in '/home/hospital/hospital_ws/build/yolo_node' returned '0': PYTHONPATH=/home/hospital/hospital_ws/build/yolo_node/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/hospital/hospital_ws/install/yolo_node/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --uninstall --editable --build-directory /home/hospital/hospital_ws/build/yolo_node/build
+[0.902s] Invoking command in '/home/hospital/hospital_ws/yolo_node': PYTHONPATH=/home/hospital/hospital_ws/build/yolo_node/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/hospital/hospital_ws/install/yolo_node/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base ../build/yolo_node build --build-base /home/hospital/hospital_ws/build/yolo_node/build install --record /home/hospital/hospital_ws/build/yolo_node/install.log --single-version-externally-managed install_data --force
+[1.035s] running egg_info
+[1.035s] writing ../build/yolo_node/yolo_node.egg-info/PKG-INFO
+[1.035s] writing dependency_links to ../build/yolo_node/yolo_node.egg-info/dependency_links.txt
+[1.035s] writing entry points to ../build/yolo_node/yolo_node.egg-info/entry_points.txt
+[1.036s] writing requirements to ../build/yolo_node/yolo_node.egg-info/requires.txt
+[1.036s] writing top-level names to ../build/yolo_node/yolo_node.egg-info/top_level.txt
+[1.036s] reading manifest file '../build/yolo_node/yolo_node.egg-info/SOURCES.txt'
+[1.037s] writing manifest file '../build/yolo_node/yolo_node.egg-info/SOURCES.txt'
+[1.037s] running build
+[1.037s] running build_py
+[1.037s] creating /home/hospital/hospital_ws/build/yolo_node/build
+[1.037s] creating /home/hospital/hospital_ws/build/yolo_node/build/lib
+[1.037s] creating /home/hospital/hospital_ws/build/yolo_node/build/lib/yolo_node
+[1.037s] copying yolo_node/__init__.py -> /home/hospital/hospital_ws/build/yolo_node/build/lib/yolo_node
+[1.037s] copying yolo_node/yolo_node.py -> /home/hospital/hospital_ws/build/yolo_node/build/lib/yolo_node
+[1.037s] running install
+[1.037s] running install_lib
+[1.038s] creating /home/hospital/hospital_ws/install/yolo_node/lib/python3.10/site-packages/yolo_node
+[1.038s] copying /home/hospital/hospital_ws/build/yolo_node/build/lib/yolo_node/__init__.py -> /home/hospital/hospital_ws/install/yolo_node/lib/python3.10/site-packages/yolo_node
+[1.038s] copying /home/hospital/hospital_ws/build/yolo_node/build/lib/yolo_node/yolo_node.py -> /home/hospital/hospital_ws/install/yolo_node/lib/python3.10/site-packages/yolo_node
+[1.038s] byte-compiling /home/hospital/hospital_ws/install/yolo_node/lib/python3.10/site-packages/yolo_node/__init__.py to __init__.cpython-310.pyc
+[1.039s] byte-compiling /home/hospital/hospital_ws/install/yolo_node/lib/python3.10/site-packages/yolo_node/yolo_node.py to yolo_node.cpython-310.pyc
+[1.039s] running install_data
+[1.039s] copying resource/yolo_node -> /home/hospital/hospital_ws/install/yolo_node/share/ament_index/resource_index/packages
+[1.039s] copying package.xml -> /home/hospital/hospital_ws/install/yolo_node/share/yolo_node
+[1.039s] running install_egg_info
+[1.040s] Copying ../build/yolo_node/yolo_node.egg-info to /home/hospital/hospital_ws/install/yolo_node/lib/python3.10/site-packages/yolo_node-0.0.0-py3.10.egg-info
+[1.041s] running install_scripts
+[1.053s] Installing yolo_node script to /home/hospital/hospital_ws/install/yolo_node/lib/yolo_node
+[1.054s] writing list of installed files to '/home/hospital/hospital_ws/build/yolo_node/install.log'
+[1.075s] Invoked command in '/home/hospital/hospital_ws/yolo_node' returned '0': PYTHONPATH=/home/hospital/hospital_ws/build/yolo_node/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/hospital/hospital_ws/install/yolo_node/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base ../build/yolo_node build --build-base /home/hospital/hospital_ws/build/yolo_node/build install --record /home/hospital/hospital_ws/build/yolo_node/install.log --single-version-externally-managed install_data --force
