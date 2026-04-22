@@ -24,7 +24,7 @@ class WhisperNode(Node):
 
         self.get_logger().info('[Whisper] 모델 로딩 중...')
         t0 = time.time()
-        self.model = whisper.load_model('tiny')
+        self.model = whisper.load_model('small')
         self.get_logger().info(f'[Whisper] 모델 로드 완료 ({time.time() - t0:.2f}초)')
 
         # 현재 호출된 방 (mic_trigger로 업데이트)
