@@ -1,5 +1,0 @@
-  File "/home/ubuntu/hospital-robot-ROS2/install/hospital_voice/lib/python3.10/site-packages/hospital_voice/tts_node.py", line 3
-    from std_msgs.msg impoty String, ByteMultiArray
-                      ^^^^^^
-SyntaxError: invalid syntax
-
