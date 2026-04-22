@@ -62,7 +62,7 @@ Visualization Manager:
         Durability Policy: Volatile
         History Policy: Keep Last
         Reliability Policy: Reliable
-        Value: /robot_1/robot_description
+        Value: /robot_2/robot_description
       Enabled: true
       Links:
         All Links Enabled: true
@@ -70,35 +70,35 @@ Visualization Manager:
         Expand Link Details: false
         Expand Tree: false
         Link Tree Style: Links in Alphabetic Order
-        robot_1/base_footprint:
+        robot_2/base_footprint:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-        robot_1/base_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        robot_1/base_scan:
+        robot_2/base_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        robot_1/caster_back_link:
+        robot_2/base_scan:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        robot_1/imu_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        robot_1/wheel_left_link:
+        robot_2/caster_back_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        robot_1/wheel_right_link:
+        robot_2/imu_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        robot_2/wheel_left_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        robot_2/wheel_right_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
@@ -116,21 +116,21 @@ Visualization Manager:
       Frame Timeout: 15
       Frames:
         All Enabled: false
-        robot_1/base_footprint:
+        robot_2/base_footprint:
           Value: true
-        robot_1/base_link:
+        robot_2/base_link:
           Value: true
-        robot_1/base_scan:
+        robot_2/base_scan:
           Value: true
-        robot_1/caster_back_link:
+        robot_2/caster_back_link:
           Value: true
-        robot_1/imu_link:
+        robot_2/imu_link:
           Value: true
-        robot_1/odom:
+        robot_2/odom:
           Value: true
-        robot_1/wheel_left_link:
+        robot_2/wheel_left_link:
           Value: true
-        robot_1/wheel_right_link:
+        robot_2/wheel_right_link:
           Value: true
       Marker Scale: 1
       Name: TF
@@ -564,7 +564,7 @@ Visualization Manager:
         Durability Policy: Volatile
         History Policy: Keep Last
         Reliability Policy: Reliable
-        Value: /robot_1/initialpose
+        Value: /robot_2/initialpose
     - Class: rviz_default_plugins/PublishPoint
       Single click: true
       Topic:

@@ -59,11 +59,13 @@ def generate_launch_description():
             IncludeLaunchDescription(
                 PythonLaunchDescriptionSource([nav2_launch_file_dir, '/bringup_launch.py']),
                 launch_arguments={
-                    'map': map_dir,
+                    # map_server가 정상 작동하려면 map 경로가 비어있으면 안 됩니다.
+                    'map': map_dir, 
                     'use_sim_time': use_sim_time,
                     'params_file': param_dir,
-                    'use_namespace': 'false',
-                    'autostart': 'true'
+                    'use_namespace': 'false', 
+                    'autostart': 'true',
+                    'use_remap': 'true'
                 }.items(),
             ),
         ]),
