@@ -1,0 +1,5 @@
+  File "/home/ubuntu/hospital-robot-ROS2/install/hospital_voice/lib/python3.10/site-packages/hospital_voice/whisper_node.py", line 15
+    'trash': ['쓰레기', '쓰레기통', '비워줘'],
+                    ^
+SyntaxError: invalid non-printable character U+00A0
+

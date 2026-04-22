@@ -9,9 +9,10 @@ import time
 
 
 KEYWORDS = {
-    'medicine': ['약 주세요', '약주세요'],
-    'emergency': ['도와줘', '도와주세요', '살려줘'],
+    'medicine': ['약', '약 주세요', '약주세요'],
+    'emergency': ['간호사', '의사', '도와줘', '도와주세요', '살려줘'],
     'ok': ['괜찮아', '괜찮아요', '됐어', '됐어요'],
+    'trash': ['쓰레기', '쓰레기통', '비워줘'],
 }
 
 
@@ -31,7 +32,7 @@ class WhisperNode(Node):
         # 발행: 키워드 매칭 결과
         self.pub_medicine  = self.create_publisher(String, '/hospital/medicine_request', 10)
         self.pub_emergency = self.create_publisher(String, '/hospital/emergency_call', 10)
-
+        self.pub_trash = self.create_publisher(String, '/hospital/trash_request',10)
         self.get_logger().info('[Whisper] 노드 준비 완료. 오디오 토픽 대기 중...')
 
     def audio_callback(self, msg: ByteMultiArray):
@@ -75,7 +76,12 @@ class WhisperNode(Node):
             msg.data = 'emergency'
             self.pub_emergency.publish(msg)
             self.get_logger().info('[→] /hospital/emergency_call 발행')
-
+ 
+        elif category == 'trash':
+            msg.data = 'trash'
+            self.pub_trash.publish(msg)
+            self.get_logger().info('[→] /hospital/trash_request 발행')
+       
         elif category == 'ok':
             self.get_logger().info('[→] 이상 없음. 순찰 복귀')
 

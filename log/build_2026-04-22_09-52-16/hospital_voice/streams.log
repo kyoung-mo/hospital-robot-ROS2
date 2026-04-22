@@ -1,0 +1,30 @@
+[0.920s] Invoking command in '/home/ubuntu/hospital-robot-ROS2/src/hospital_voice': PYTHONPATH=/home/ubuntu/hospital-robot-ROS2/build/hospital_voice/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/ubuntu/hospital-robot-ROS2/install/hospital_voice/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base ../../build/hospital_voice build --build-base /home/ubuntu/hospital-robot-ROS2/build/hospital_voice/build install --record /home/ubuntu/hospital-robot-ROS2/build/hospital_voice/install.log --single-version-externally-managed install_data
+[1.110s] running egg_info
+[1.111s] writing ../../build/hospital_voice/hospital_voice.egg-info/PKG-INFO
+[1.112s] writing dependency_links to ../../build/hospital_voice/hospital_voice.egg-info/dependency_links.txt
+[1.113s] writing entry points to ../../build/hospital_voice/hospital_voice.egg-info/entry_points.txt
+[1.113s] writing requirements to ../../build/hospital_voice/hospital_voice.egg-info/requires.txt
+[1.113s] writing top-level names to ../../build/hospital_voice/hospital_voice.egg-info/top_level.txt
+[1.115s] reading manifest file '../../build/hospital_voice/hospital_voice.egg-info/SOURCES.txt'
+[1.117s] writing manifest file '../../build/hospital_voice/hospital_voice.egg-info/SOURCES.txt'
+[1.117s] running build
+[1.117s] running build_py
+[1.117s] copying hospital_voice/whisper_node.py -> /home/ubuntu/hospital-robot-ROS2/build/hospital_voice/build/lib/hospital_voice
+[1.117s] running install
+[1.118s] running install_lib
+[1.118s] copying /home/ubuntu/hospital-robot-ROS2/build/hospital_voice/build/lib/hospital_voice/whisper_node.py -> /home/ubuntu/hospital-robot-ROS2/install/hospital_voice/lib/python3.10/site-packages/hospital_voice
+[1.119s] byte-compiling /home/ubuntu/hospital-robot-ROS2/install/hospital_voice/lib/python3.10/site-packages/hospital_voice/whisper_node.py to whisper_node.cpython-310.pyc
+[1.119s]   File "/home/ubuntu/hospital-robot-ROS2/install/hospital_voice/lib/python3.10/site-packages/hospital_voice/whisper_node.py", line 15
+[1.119s]     'trash': ['쓰레기', '쓰레기통', '비워줘'],
+[1.119s]                     ^
+[1.119s] SyntaxError: invalid non-printable character U+00A0
+[1.119s] 
+[1.119s] running install_data
+[1.119s] running install_egg_info
+[1.121s] removing '/home/ubuntu/hospital-robot-ROS2/install/hospital_voice/lib/python3.10/site-packages/hospital_voice-0.0.0-py3.10.egg-info' (and everything under it)
+[1.122s] Copying ../../build/hospital_voice/hospital_voice.egg-info to /home/ubuntu/hospital-robot-ROS2/install/hospital_voice/lib/python3.10/site-packages/hospital_voice-0.0.0-py3.10.egg-info
+[1.125s] running install_scripts
+[1.140s] Installing tts_node script to /home/ubuntu/hospital-robot-ROS2/install/hospital_voice/lib/hospital_voice
+[1.141s] Installing whisper_node script to /home/ubuntu/hospital-robot-ROS2/install/hospital_voice/lib/hospital_voice
+[1.141s] writing list of installed files to '/home/ubuntu/hospital-robot-ROS2/build/hospital_voice/install.log'
+[1.166s] Invoked command in '/home/ubuntu/hospital-robot-ROS2/src/hospital_voice' returned '0': PYTHONPATH=/home/ubuntu/hospital-robot-ROS2/build/hospital_voice/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/ubuntu/hospital-robot-ROS2/install/hospital_voice/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base ../../build/hospital_voice build --build-base /home/ubuntu/hospital-robot-ROS2/build/hospital_voice/build install --record /home/ubuntu/hospital-robot-ROS2/build/hospital_voice/install.log --single-version-externally-managed install_data
