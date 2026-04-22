@@ -53,3 +53,5 @@ qtcreator-*
 CATKIN_IGNORE
 log/
 install/
+whisper/record/
+whisper/tts/
