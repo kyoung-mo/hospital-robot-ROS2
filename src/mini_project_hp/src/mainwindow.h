@@ -44,7 +44,7 @@ private:
     RosThread *rosThread;
     QPixmap mapPixmap;
 
-    // 시작 좌표: 스테이션 1 고정
+    // 로봇의 시작 좌표: S1 위치 (4.437, -0.969)
     double r1x = 4.437;
     double r1y = -0.969;
     QString r1Target = "IDLE";

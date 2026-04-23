@@ -3,9 +3,9 @@
 <package format="3">
   <name>mini_project_hp</name>
   <version>0.0.0</version>
-  <description>Smart Hospital Quarantine System GUI</description>
-  <maintainer email="ubuntu@test.com">ubuntu</maintainer>
-  <license>Apache-2.0</license>
+  <description>Smart Hospital Central Control System</description>
+  <maintainer email="user@todo.todo">user</maintainer>
+  <license>TODO: License declaration</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 
@@ -13,6 +13,7 @@
   <depend>std_msgs</depend>
   <depend>geometry_msgs</depend>
   <depend>sensor_msgs</depend>
+  <depend>qt_gui</depend>
 
   <export>
     <build_type>ament_cmake</build_type>

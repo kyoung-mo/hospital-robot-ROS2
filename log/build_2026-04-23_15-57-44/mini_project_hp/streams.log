@@ -1,0 +1,74 @@
+[0.008s] Invoking command in '/home/ubuntu/ros2_ws/build/mini_project_hp': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/ubuntu/turtlebot3_ws/install/turtlebot3_teleop:/home/ubuntu/turtlebot3_ws/install/turtlebot3_example:/opt/ros/humble /home/ubuntu/Qt/Tools/CMake/bin/cmake /home/ubuntu/ros2_ws/src/mini_project_hp -DCMAKE_INSTALL_PREFIX=/home/ubuntu/ros2_ws/install/mini_project_hp
+[0.063s] -- The C compiler identification is GNU 11.4.0
+[0.107s] -- The CXX compiler identification is GNU 11.4.0
+[0.117s] -- Detecting C compiler ABI info
+[0.177s] -- Detecting C compiler ABI info - done
+[0.190s] -- Check for working C compiler: /usr/bin/cc - skipped
+[0.190s] -- Detecting C compile features
+[0.191s] -- Detecting C compile features - done
+[0.194s] -- Detecting CXX compiler ABI info
+[0.257s] -- Detecting CXX compiler ABI info - done
+[0.272s] -- Check for working CXX compiler: /usr/bin/c++ - skipped
+[0.272s] -- Detecting CXX compile features
+[0.272s] -- Detecting CXX compile features - done
+[0.275s] -- Found ament_cmake: 1.3.14 (/opt/ros/humble/share/ament_cmake/cmake)
+[0.381s] -- Found Python3: /usr/bin/python3 (found version "3.10.12") found components: Interpreter
+[0.457s] -- Found rclcpp: 16.0.19 (/opt/ros/humble/share/rclcpp/cmake)
+[0.497s] -- Found rosidl_generator_c: 3.1.8 (/opt/ros/humble/share/rosidl_generator_c/cmake)
+[0.502s] -- Found rosidl_adapter: 3.1.8 (/opt/ros/humble/share/rosidl_adapter/cmake)
+[0.510s] -- Found rosidl_generator_cpp: 3.1.8 (/opt/ros/humble/share/rosidl_generator_cpp/cmake)
+[0.523s] -- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c
+[0.539s] -- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp
+[0.583s] -- Found rmw_implementation_cmake: 6.1.2 (/opt/ros/humble/share/rmw_implementation_cmake/cmake)
+[0.586s] -- Found rmw_fastrtps_cpp: 6.2.10 (/opt/ros/humble/share/rmw_fastrtps_cpp/cmake)
+[0.676s] -- Found OpenSSL: /usr/lib/x86_64-linux-gnu/libcrypto.so (found version "3.0.2")
+[0.705s] -- Found FastRTPS: /opt/ros/humble/include
+[0.748s] -- Using RMW implementation 'rmw_fastrtps_cpp' as default
+[0.757s] -- Performing Test CMAKE_HAVE_LIBC_PTHREAD
+[0.819s] -- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Success
+[0.819s] -- Found Threads: TRUE
+[0.874s] -- Found geometry_msgs: 4.9.1 (/opt/ros/humble/share/geometry_msgs/cmake)
+[0.886s] -- Found sensor_msgs: 4.9.1 (/opt/ros/humble/share/sensor_msgs/cmake)
+[0.918s] -- Performing Test HAVE_STDATOMIC
+[1.009s] -- Performing Test HAVE_STDATOMIC - Success
+[1.010s] -- Found WrapAtomic: TRUE
+[1.032s] -- Found OpenGL: /usr/lib/x86_64-linux-gnu/libOpenGL.so
+[1.033s] -- Found WrapOpenGL: TRUE
+[1.091s] -- Found XKB: /usr/lib/x86_64-linux-gnu/libxkbcommon.so (found suitable version "1.4.0", minimum required is "0.5.0")
+[1.129s] -- Found WrapVulkanHeaders: /usr/include
+[1.223s] -- Configuring done (1.2s)
+[1.258s] -- Generating done (0.0s)
+[1.261s] -- Build files have been written to: /home/ubuntu/ros2_ws/build/mini_project_hp
+[1.278s] Invoked command in '/home/ubuntu/ros2_ws/build/mini_project_hp' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/ubuntu/turtlebot3_ws/install/turtlebot3_teleop:/home/ubuntu/turtlebot3_ws/install/turtlebot3_example:/opt/ros/humble /home/ubuntu/Qt/Tools/CMake/bin/cmake /home/ubuntu/ros2_ws/src/mini_project_hp -DCMAKE_INSTALL_PREFIX=/home/ubuntu/ros2_ws/install/mini_project_hp
+[1.280s] Invoking command in '/home/ubuntu/ros2_ws/build/mini_project_hp': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/ubuntu/turtlebot3_ws/install/turtlebot3_teleop:/home/ubuntu/turtlebot3_ws/install/turtlebot3_example:/opt/ros/humble /home/ubuntu/Qt/Tools/CMake/bin/cmake --build /home/ubuntu/ros2_ws/build/mini_project_hp -- -j4 -l4
+[1.306s] [  0%] Built target mini_project_hp_autogen_timestamp_deps
+[1.318s] [ 12%] [34m[1mAutomatic MOC and UIC for target mini_project_hp[0m
+[1.940s] [ 12%] Built target mini_project_hp_autogen
+[1.947s] [ 25%] [34m[1mAutomatic RCC for resources.qrc[0m
+[2.011s] [ 37%] [32mBuilding CXX object CMakeFiles/mini_project_hp.dir/mini_project_hp_autogen/mocs_compilation.cpp.o[0m
+[2.011s] [ 50%] [32mBuilding CXX object CMakeFiles/mini_project_hp.dir/src/mainwindow.cpp.o[0m
+[2.012s] [ 62%] [32mBuilding CXX object CMakeFiles/mini_project_hp.dir/src/main.cpp.o[0m
+[2.013s] [ 75%] [32mBuilding CXX object CMakeFiles/mini_project_hp.dir/mini_project_hp_autogen/EWIEGA46WW/qrc_resources.cpp.o[0m
+[16.262s] [ 87%] [32m[1mLinking CXX executable mini_project_hp[0m
+[17.983s] [100%] Built target mini_project_hp
+[17.990s] Invoked command in '/home/ubuntu/ros2_ws/build/mini_project_hp' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/ubuntu/turtlebot3_ws/install/turtlebot3_teleop:/home/ubuntu/turtlebot3_ws/install/turtlebot3_example:/opt/ros/humble /home/ubuntu/Qt/Tools/CMake/bin/cmake --build /home/ubuntu/ros2_ws/build/mini_project_hp -- -j4 -l4
+[17.994s] Invoking command in '/home/ubuntu/ros2_ws/build/mini_project_hp': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/ubuntu/turtlebot3_ws/install/turtlebot3_teleop:/home/ubuntu/turtlebot3_ws/install/turtlebot3_example:/opt/ros/humble /home/ubuntu/Qt/Tools/CMake/bin/cmake --install /home/ubuntu/ros2_ws/build/mini_project_hp
+[17.997s] -- Install configuration: ""
+[17.997s] -- Installing: /home/ubuntu/ros2_ws/install/mini_project_hp/lib/mini_project_hp/mini_project_hp
+[18.004s] -- Set non-toolchain portion of runtime path of "/home/ubuntu/ros2_ws/install/mini_project_hp/lib/mini_project_hp/mini_project_hp" to ""
+[18.004s] -- Installing: /home/ubuntu/ros2_ws/install/mini_project_hp/share/ament_index/resource_index/package_run_dependencies/mini_project_hp
+[18.004s] -- Installing: /home/ubuntu/ros2_ws/install/mini_project_hp/share/ament_index/resource_index/parent_prefix_path/mini_project_hp
+[18.004s] -- Installing: /home/ubuntu/ros2_ws/install/mini_project_hp/share/mini_project_hp/environment/ament_prefix_path.sh
+[18.004s] -- Installing: /home/ubuntu/ros2_ws/install/mini_project_hp/share/mini_project_hp/environment/ament_prefix_path.dsv
+[18.004s] -- Installing: /home/ubuntu/ros2_ws/install/mini_project_hp/share/mini_project_hp/environment/path.sh
+[18.004s] -- Installing: /home/ubuntu/ros2_ws/install/mini_project_hp/share/mini_project_hp/environment/path.dsv
+[18.004s] -- Installing: /home/ubuntu/ros2_ws/install/mini_project_hp/share/mini_project_hp/local_setup.bash
+[18.004s] -- Installing: /home/ubuntu/ros2_ws/install/mini_project_hp/share/mini_project_hp/local_setup.sh
+[18.004s] -- Installing: /home/ubuntu/ros2_ws/install/mini_project_hp/share/mini_project_hp/local_setup.zsh
+[18.004s] -- Installing: /home/ubuntu/ros2_ws/install/mini_project_hp/share/mini_project_hp/local_setup.dsv
+[18.004s] -- Installing: /home/ubuntu/ros2_ws/install/mini_project_hp/share/mini_project_hp/package.dsv
+[18.004s] -- Installing: /home/ubuntu/ros2_ws/install/mini_project_hp/share/ament_index/resource_index/packages/mini_project_hp
+[18.004s] -- Installing: /home/ubuntu/ros2_ws/install/mini_project_hp/share/mini_project_hp/cmake/mini_project_hpConfig.cmake
+[18.005s] -- Installing: /home/ubuntu/ros2_ws/install/mini_project_hp/share/mini_project_hp/cmake/mini_project_hpConfig-version.cmake
+[18.005s] -- Installing: /home/ubuntu/ros2_ws/install/mini_project_hp/share/mini_project_hp/package.xml
+[18.009s] Invoked command in '/home/ubuntu/ros2_ws/build/mini_project_hp' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/ubuntu/turtlebot3_ws/install/turtlebot3_teleop:/home/ubuntu/turtlebot3_ws/install/turtlebot3_example:/opt/ros/humble /home/ubuntu/Qt/Tools/CMake/bin/cmake --install /home/ubuntu/ros2_ws/build/mini_project_hp

@@ -1,0 +1,2 @@
+Invoking command in '/home/ubuntu/ros2_ws/build/mini_project_hp': /home/ubuntu/Qt/Tools/CMake/bin/cmake /home/ubuntu/ros2_ws/src/mini_project_hp -DCMAKE_INSTALL_PREFIX=/home/ubuntu/ros2_ws/install/mini_project_hp
+Invoked command in '/home/ubuntu/ros2_ws/build/mini_project_hp' returned '1': /home/ubuntu/Qt/Tools/CMake/bin/cmake /home/ubuntu/ros2_ws/src/mini_project_hp -DCMAKE_INSTALL_PREFIX=/home/ubuntu/ros2_ws/install/mini_project_hp

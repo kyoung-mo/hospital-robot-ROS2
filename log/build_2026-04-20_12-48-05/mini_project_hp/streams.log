@@ -1,0 +1,66 @@
+[0.015s] Invoking command in '/home/ubuntu/ros2_ws/build/mini_project_hp': /home/ubuntu/Qt/Tools/CMake/bin/cmake /home/ubuntu/ros2_ws/src/mini_project_hp -DCMAKE_INSTALL_PREFIX=/home/ubuntu/ros2_ws/install/mini_project_hp
+[0.061s] -- The C compiler identification is GNU 11.4.0
+[0.109s] -- The CXX compiler identification is GNU 11.4.0
+[0.125s] -- Detecting C compiler ABI info
+[0.195s] -- Detecting C compiler ABI info - done
+[0.199s] -- Check for working C compiler: /usr/bin/cc - skipped
+[0.200s] -- Detecting C compile features
+[0.200s] -- Detecting C compile features - done
+[0.203s] -- Detecting CXX compiler ABI info
+[0.275s] -- Detecting CXX compiler ABI info - done
+[0.290s] -- Check for working CXX compiler: /usr/bin/c++ - skipped
+[0.291s] -- Detecting CXX compile features
+[0.291s] -- Detecting CXX compile features - done
+[0.297s] -- Found ament_cmake: 1.3.14 (/opt/ros/humble/share/ament_cmake/cmake)
+[0.409s] -- Found Python3: /usr/bin/python3 (found version "3.10.12") found components: Interpreter
+[0.486s] -- Found rclcpp: 16.0.19 (/opt/ros/humble/share/rclcpp/cmake)
+[0.527s] -- Found rosidl_generator_c: 3.1.8 (/opt/ros/humble/share/rosidl_generator_c/cmake)
+[0.532s] -- Found rosidl_adapter: 3.1.8 (/opt/ros/humble/share/rosidl_adapter/cmake)
+[0.543s] -- Found rosidl_generator_cpp: 3.1.8 (/opt/ros/humble/share/rosidl_generator_cpp/cmake)
+[0.557s] -- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c
+[0.573s] -- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp
+[0.617s] -- Found rmw_implementation_cmake: 6.1.2 (/opt/ros/humble/share/rmw_implementation_cmake/cmake)
+[0.620s] -- Found rmw_fastrtps_cpp: 6.2.10 (/opt/ros/humble/share/rmw_fastrtps_cpp/cmake)
+[0.719s] -- Found OpenSSL: /usr/lib/x86_64-linux-gnu/libcrypto.so (found version "3.0.2")
+[0.749s] -- Found FastRTPS: /opt/ros/humble/include
+[0.790s] -- Using RMW implementation 'rmw_fastrtps_cpp' as default
+[0.800s] -- Performing Test CMAKE_HAVE_LIBC_PTHREAD
+[0.864s] -- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Success
+[0.865s] -- Found Threads: TRUE
+[0.922s] -- Found geometry_msgs: 4.9.1 (/opt/ros/humble/share/geometry_msgs/cmake)
+[0.936s] -- Found sensor_msgs: 4.9.1 (/opt/ros/humble/share/sensor_msgs/cmake)
+[0.972s] -- Performing Test HAVE_STDATOMIC
+[1.072s] -- Performing Test HAVE_STDATOMIC - Success
+[1.072s] -- Found WrapAtomic: TRUE
+[1.094s] -- Found OpenGL: /usr/lib/x86_64-linux-gnu/libOpenGL.so
+[1.095s] -- Found WrapOpenGL: TRUE
+[1.157s] -- Found XKB: /usr/lib/x86_64-linux-gnu/libxkbcommon.so (found suitable version "1.4.0", minimum required is "0.5.0")
+[1.194s] -- Found WrapVulkanHeaders: /usr/include
+[1.275s] Error parsing '/home/ubuntu/ros2_ws/src/mini_project_hp/package.xml':
+[1.310s] Traceback (most recent call last):
+[1.310s]   File "/opt/ros/humble/share/ament_cmake_core/cmake/core/package_xml_2_cmake.py", line 150, in <module>
+[1.310s]     main()
+[1.310s]   File "/opt/ros/humble/share/ament_cmake_core/cmake/core/package_xml_2_cmake.py", line 53, in main
+[1.310s]     raise e
+[1.310s]   File "/opt/ros/humble/share/ament_cmake_core/cmake/core/package_xml_2_cmake.py", line 49, in main
+[1.310s]     package = parse_package_string(
+[1.310s]   File "/usr/lib/python3/dist-packages/catkin_pkg/package.py", line 788, in parse_package_string
+[1.310s]     pkg.validate(warnings=warnings)
+[1.311s]   File "/usr/lib/python3/dist-packages/catkin_pkg/package.py", line 330, in validate
+[1.311s]     raise InvalidPackage('\n'.join(errors), self.filename)
+[1.311s] catkin_pkg.package.InvalidPackage: Error(s) in package '/home/ubuntu/ros2_ws/src/mini_project_hp/package.xml':
+[1.311s] Invalid email "ubuntu@localhost" for person "ubuntu"
+[1.325s] [31mCMake Error at /opt/ros/humble/share/ament_cmake_core/cmake/core/ament_package_xml.cmake:95 (message):
+[1.325s]   execute_process(/usr/bin/python3
+[1.325s]   /opt/ros/humble/share/ament_cmake_core/cmake/core/package_xml_2_cmake.py
+[1.325s]   /home/ubuntu/ros2_ws/src/mini_project_hp/package.xml
+[1.325s]   /home/ubuntu/ros2_ws/build/mini_project_hp/ament_cmake_core/package.cmake)
+[1.325s]   returned error code 1
+[1.325s] Call Stack (most recent call first):
+[1.325s]   /opt/ros/humble/share/ament_cmake_core/cmake/core/ament_package_xml.cmake:49 (_ament_package_xml)
+[1.325s]   /opt/ros/humble/share/ament_cmake_core/cmake/core/ament_package.cmake:63 (ament_package_xml)
+[1.325s]   CMakeLists.txt:48 (ament_package)
+[1.326s] 
+[1.326s] [0m
+[1.326s] -- Configuring incomplete, errors occurred!
+[1.339s] Invoked command in '/home/ubuntu/ros2_ws/build/mini_project_hp' returned '1': /home/ubuntu/Qt/Tools/CMake/bin/cmake /home/ubuntu/ros2_ws/src/mini_project_hp -DCMAKE_INSTALL_PREFIX=/home/ubuntu/ros2_ws/install/mini_project_hp

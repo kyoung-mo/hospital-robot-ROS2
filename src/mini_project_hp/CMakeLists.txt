@@ -11,6 +11,8 @@ find_package(rclcpp REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
+
+set(Qt6_DIR "/user/lib/x86_64-linux-gnu/cmake/Qt6")
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets)
 
 include_directories(src)
@@ -19,7 +21,6 @@ add_executable(${PROJECT_NAME}
   src/main.cpp
   src/mainwindow.cpp
   resources.qrc
-  src/ros_thread.cpp
   src/ros_thread.h
 )
 
