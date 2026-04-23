@@ -27,6 +27,8 @@ class D435Node(Node):
         self.fall_status_r1 = "NONE"
         self.fall_status_r2 = "NONE"
         self.waste_status = {"room1": "OK", "room2": "OK"}
+        self.waste_pub_count = {"room1": 0, "room2": 0}
+        self.waste_last_pub_time = {"room1": 0.0, "room2": 0.0}
         self.fall_status = "NONE"
 
         self.depths = {
@@ -60,10 +62,10 @@ class D435Node(Node):
         h, w = depth.shape
 
         rois = {
-            "room1_bed": depth[0:h//2, w//4:w//2],
-            "room2_bed": depth[0:h//2, w//2:3*w//4],
-            "room1_waste": depth[h//2:h//2 + (h//2)*2//3, w//4+40:w//2-40],
-            "room2_waste": depth[h//2:h//2 + (h//2)*2//3, w//2+40:3*w//4-40],
+            "room1_bed":   depth[0:h//2,                   w//4:w//2],
+            "room2_bed":   depth[0:h//2,                   w//2:3*w//4],
+            "room1_waste": depth[h//2:h//2+(h//2)*2//3,    w//4+40:w//2-40],
+            "room2_waste": depth[h//2:h//2+(h//2)*2//3,    w//2+40:3*w//4-40],
         }
 
         for key, roi in rois.items():
@@ -75,40 +77,31 @@ class D435Node(Node):
 
     def check_waste(self):
         msg = String()
+        now = time.time()
 
-        # ROOM1
-        prev = self.waste_status["room1"]
-        if not np.isnan(self.depths["room1_waste"]) and self.depths["room1_waste"] < 750:
-            self.waste_status["room1"] = "FULL"
-            msg.data = "ROOM1_WASTE_FULL"
-            self.facility_pub.publish(msg)
+        for room in ["room1", "room2"]:
+            depth_key = f"{room}_waste"
+            prev = self.waste_status[room]
 
-            if prev != "FULL":
-                self.get_logger().warn(f"ROOM1 WASTE FULL ({self.depths['room1_waste']:.0f}mm)")
-        else:
-            self.waste_status["room1"] = "OK"
-            msg.data = "ROOM1_WASTE_OK"
-            self.facility_pub.publish(msg)
+            if not np.isnan(self.depths[depth_key]) and self.depths[depth_key] < 750:
+                if prev != "FULL":
+                    self.waste_status[room] = "FULL"
+                    self.waste_pub_count[room] = 0
+                    self.waste_last_pub_time[room] = 0.0
+                    self.get_logger().warn(f"{room.upper()} WASTE FULL ({self.depths[depth_key]:.0f}mm)")
 
-            if prev != "OK":
-                self.get_logger().info("ROOM1 WASTE OK")
-
-        # ROOM2
-        prev = self.waste_status["room2"]
-        if not np.isnan(self.depths["room2_waste"]) and self.depths["room2_waste"] < 750:
-            self.waste_status["room2"] = "FULL"
-            msg.data = "ROOM2_WASTE_FULL"
-            self.facility_pub.publish(msg)
-
-            if prev != "FULL":
-                self.get_logger().warn(f"ROOM2 WASTE FULL ({self.depths['room2_waste']:.0f}mm)")
-        else:
-            self.waste_status["room2"] = "OK"
-            msg.data = "ROOM2_WASTE_OK"
-            self.facility_pub.publish(msg)
-
-            if prev != "OK":
-                self.get_logger().info("ROOM2 WASTE OK")
+                if self.waste_pub_count[room] < 5 and (now - self.waste_last_pub_time[room]) >= 1.0:
+                    msg.data = f"{room.upper()}_WASTE_FULL"
+                    self.facility_pub.publish(msg)
+                    self.waste_pub_count[room] += 1
+                    self.waste_last_pub_time[room] = now
+                    self.get_logger().info(f"{room.upper()} WASTE FULL 발행 {self.waste_pub_count[room]}/5")
+            else:
+                if prev != "OK":
+                    self.get_logger().info(f"{room.upper()} WASTE OK")
+                self.waste_status[room] = "OK"
+                self.waste_pub_count[room] = 0
+                self.waste_last_pub_time[room] = 0.0
 
     def check_fall(self):
         FALL_THRESHOLD = 750
@@ -123,16 +116,13 @@ class D435Node(Node):
         prev = self.fall_status_r1
         if fall_r1:
             self.fall_status_r1 = "SUSPECTED"
-
             msg = String()
             msg.data = "ROOM1_FALL"
             self.fall_pub.publish(msg)
-
             if prev != "SUSPECTED":
                 self.get_logger().warn("ROOM1 FALL 시작")
         else:
             self.fall_status_r1 = "NONE"
-
             if prev != "NONE":
                 self.get_logger().info("ROOM1 FALL 해제")
 
@@ -140,16 +130,13 @@ class D435Node(Node):
         prev = self.fall_status_r2
         if fall_r2:
             self.fall_status_r2 = "SUSPECTED"
-
             msg = String()
             msg.data = "ROOM2_FALL"
             self.fall_pub.publish(msg)
-
             if prev != "SUSPECTED":
                 self.get_logger().warn("ROOM2 FALL 시작")
         else:
             self.fall_status_r2 = "NONE"
-
             if prev != "NONE":
                 self.get_logger().info("ROOM2 FALL 해제")
 
@@ -187,29 +174,26 @@ class D435Node(Node):
         cv2.rectangle(viz, (w//4, h//2), (w//2, h), (0, 165, 255), 2)
         cv2.rectangle(viz, (w//2, h//2), (3*w//4, h), (0, 255, 0), 2)
 
-        cv2.rectangle(viz, (w//4+40, h//2), (w//2-40, h//2 + (h//2)*2//3), (0, 255, 255), 2)
-        cv2.rectangle(viz, (w//2+40, h//2), (3*w//4-40, h//2 + (h//2)*2//3), (0, 255, 255), 2)
+        cv2.rectangle(viz, (w//4+40, h//2), (w//2-40, h//2+(h//2)*2//3), (0, 255, 255), 2)
+        cv2.rectangle(viz, (w//2+40, h//2), (3*w//4-40, h//2+(h//2)*2//3), (0, 255, 255), 2)
 
         def safe(key):
             v = self.depths[key]
             return f"{v:.0f}mm" if not np.isnan(v) else "---"
 
-        cv2.putText(viz, f"R1 Bed: {safe('room1_bed')}", (w//4, 25), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0,0,255), 2)
-        cv2.putText(viz, f"R2 Bed: {safe('room2_bed')}", (w//2+10, 25), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255,0,0), 2)
-        cv2.putText(viz, f"R1 Waste: {safe('room1_waste')}", (w//4, h//2+25), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0,165,255), 2)
-        cv2.putText(viz, f"R2 Waste: {safe('room2_waste')}", (w//2+10, h//2+25), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0,255,0), 2)
+        cv2.putText(viz, f"R1 Bed: {safe('room1_bed')}",    (w//4, 25),         cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0,0,255),   2)
+        cv2.putText(viz, f"R2 Bed: {safe('room2_bed')}",    (w//2+10, 25),      cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255,0,0),   2)
+        cv2.putText(viz, f"R1 Waste: {safe('room1_waste')}", (w//4, h//2+25),   cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0,165,255), 2)
+        cv2.putText(viz, f"R2 Waste: {safe('room2_waste')}", (w//2+10, h//2+25),cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0,255,0),   2)
 
         if self.fall_status_r1 == "SUSPECTED":
-            cv2.putText(viz, "ROOM1 FALL!", (10, h//4), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0,0,255), 2)
-
+            cv2.putText(viz, "ROOM1 FALL!", (10, h//4),        cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0,0,255),   2)
         if self.fall_status_r2 == "SUSPECTED":
-            cv2.putText(viz, "ROOM2 FALL!", (3*w//4+5, h//4), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0,0,255), 2)
-
+            cv2.putText(viz, "ROOM2 FALL!", (3*w//4+5, h//4),  cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0,0,255),   2)
         if self.waste_status["room1"] == "FULL":
-            cv2.putText(viz, "R1 WASTE FULL!", (10, h//2 + h//4), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0,165,255), 2)
-
+            cv2.putText(viz, "R1 WASTE FULL!", (10, h//2+h//4),       cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0,165,255), 2)
         if self.waste_status["room2"] == "FULL":
-            cv2.putText(viz, "R2 WASTE FULL!", (3*w//4+5, h//2 + h//4), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0,255,0), 2)
+            cv2.putText(viz, "R2 WASTE FULL!", (3*w//4+5, h//2+h//4), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0,255,0),   2)
 
         msg = self.bridge.cv2_to_imgmsg(viz, encoding="bgr8")
         msg.header.stamp = self.get_clock().now().to_msg()
