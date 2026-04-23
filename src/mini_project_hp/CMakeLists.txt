@@ -20,8 +20,9 @@ include_directories(src)
 add_executable(${PROJECT_NAME}
   src/main.cpp
   src/mainwindow.cpp
-  resources.qrc
+  src/ros_thread.cpp  # [추가] 한 줄짜리 파일이라도 빌드 목록에 있어야 합니다.
   src/ros_thread.h
+  resources.qrc
 )
 
 target_link_libraries(${PROJECT_NAME} Qt6::Widgets)
