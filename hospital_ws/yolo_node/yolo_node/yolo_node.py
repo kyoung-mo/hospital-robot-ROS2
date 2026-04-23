@@ -31,8 +31,8 @@ class PoseNode(Node):
 
     def d435_callback(self, msg):
         data = msg.data.upper()
-        if "ROOM1" in data: self.current_location = "room1"
-        elif "ROOM2" in data: self.current_location = "room2"
+        if "101" in data: self.current_location = "101"
+        elif "102" in data: self.current_location = "102"
         else: self.current_location = "Corridor"
         self.get_logger().info(f"📍 Location set to: {self.current_location}")
 
