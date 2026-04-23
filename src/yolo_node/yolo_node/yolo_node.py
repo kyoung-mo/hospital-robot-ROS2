@@ -32,6 +32,13 @@ class PoseNode(Node):
         self.get_logger().info(f"📍 Location updated to: {self.current_location}")
 
     def image_callback(self, msg):
+        # 오래된 프레임 버리기 (0.5초 이상 된 프레임 스킵)
+        cam_time = msg.header.stamp.sec + msg.header.stamp.nanosec * 1e-9
+        now = self.get_clock().now().nanoseconds * 1e-9
+        delay = now - cam_time
+        if delay > 0.5:
+            self.get_logger().warn(f"⚠️ 오래된 프레임 스킵: {delay:.2f}초")
+            return
         try:
             raw_data = np.frombuffer(msg.data, dtype=np.uint8)
             yuv_img = raw_data.reshape((msg.height + msg.height // 2, msg.width))
