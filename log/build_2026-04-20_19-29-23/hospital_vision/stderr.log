@@ -1,5 +1,0 @@
-  File "/home/hospital/hospital_ws/install/hospital_vision/lib/python3.10/site-packages/hospital_vision/d435_node1.py", line 1
-    jimport rclpy
-            ^^^^^
-SyntaxError: invalid syntax
-
