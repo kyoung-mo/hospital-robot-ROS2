@@ -55,3 +55,6 @@ log/
 install/
 whisper/record/
 whisper/tts/
+build/
+install/
+log/
