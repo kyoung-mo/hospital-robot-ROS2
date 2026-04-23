@@ -1,0 +1,20 @@
+running egg_info
+writing ../../build/hospital_vision/hospital_vision.egg-info/PKG-INFO
+writing dependency_links to ../../build/hospital_vision/hospital_vision.egg-info/dependency_links.txt
+writing entry points to ../../build/hospital_vision/hospital_vision.egg-info/entry_points.txt
+writing requirements to ../../build/hospital_vision/hospital_vision.egg-info/requires.txt
+writing top-level names to ../../build/hospital_vision/hospital_vision.egg-info/top_level.txt
+reading manifest file '../../build/hospital_vision/hospital_vision.egg-info/SOURCES.txt'
+writing manifest file '../../build/hospital_vision/hospital_vision.egg-info/SOURCES.txt'
+running build
+running build_py
+running install
+running install_lib
+running install_data
+running install_egg_info
+removing '/home/hospital/hospital-ism/hospital_ws/install/hospital_vision/lib/python3.10/site-packages/hospital_vision-0.0.0-py3.10.egg-info' (and everything under it)
+Copying ../../build/hospital_vision/hospital_vision.egg-info to /home/hospital/hospital-ism/hospital_ws/install/hospital_vision/lib/python3.10/site-packages/hospital_vision-0.0.0-py3.10.egg-info
+running install_scripts
+Installing d435_node script to /home/hospital/hospital-ism/hospital_ws/install/hospital_vision/lib/hospital_vision
+Installing d435_node1 script to /home/hospital/hospital-ism/hospital_ws/install/hospital_vision/lib/hospital_vision
+writing list of installed files to '/home/hospital/hospital-ism/hospital_ws/build/hospital_vision/install.log'
