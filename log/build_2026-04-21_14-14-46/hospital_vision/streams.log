@@ -1,0 +1,36 @@
+[0.648s] Invoking command in '/home/hospital/hospital_ws/build/hospital_vision': PYTHONPATH=/home/hospital/hospital_ws/build/hospital_vision/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/hospital/hospital_ws/install/hospital_vision/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --uninstall --editable --build-directory /home/hospital/hospital_ws/build/hospital_vision/build
+[0.797s] running develop
+[0.880s] Removing /home/hospital/hospital_ws/install/hospital_vision/lib/python3.10/site-packages/hospital-vision.egg-link (link to .)
+[0.903s] Invoked command in '/home/hospital/hospital_ws/build/hospital_vision' returned '0': PYTHONPATH=/home/hospital/hospital_ws/build/hospital_vision/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/hospital/hospital_ws/install/hospital_vision/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --uninstall --editable --build-directory /home/hospital/hospital_ws/build/hospital_vision/build
+[0.904s] Invoking command in '/home/hospital/hospital_ws/src/hospital_vision': PYTHONPATH=/home/hospital/hospital_ws/build/hospital_vision/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/hospital/hospital_ws/install/hospital_vision/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base ../../build/hospital_vision build --build-base /home/hospital/hospital_ws/build/hospital_vision/build install --record /home/hospital/hospital_ws/build/hospital_vision/install.log --single-version-externally-managed install_data --force
+[1.037s] running egg_info
+[1.038s] writing ../../build/hospital_vision/hospital_vision.egg-info/PKG-INFO
+[1.038s] writing dependency_links to ../../build/hospital_vision/hospital_vision.egg-info/dependency_links.txt
+[1.038s] writing entry points to ../../build/hospital_vision/hospital_vision.egg-info/entry_points.txt
+[1.038s] writing requirements to ../../build/hospital_vision/hospital_vision.egg-info/requires.txt
+[1.038s] writing top-level names to ../../build/hospital_vision/hospital_vision.egg-info/top_level.txt
+[1.039s] reading manifest file '../../build/hospital_vision/hospital_vision.egg-info/SOURCES.txt'
+[1.039s] writing manifest file '../../build/hospital_vision/hospital_vision.egg-info/SOURCES.txt'
+[1.039s] running build
+[1.039s] running build_py
+[1.040s] running install
+[1.040s] running install_lib
+[1.041s] creating /home/hospital/hospital_ws/install/hospital_vision/lib/python3.10/site-packages/hospital_vision
+[1.041s] copying /home/hospital/hospital_ws/build/hospital_vision/build/lib/hospital_vision/__init__.py -> /home/hospital/hospital_ws/install/hospital_vision/lib/python3.10/site-packages/hospital_vision
+[1.041s] copying /home/hospital/hospital_ws/build/hospital_vision/build/lib/hospital_vision/d435_node1.py -> /home/hospital/hospital_ws/install/hospital_vision/lib/python3.10/site-packages/hospital_vision
+[1.041s] copying /home/hospital/hospital_ws/build/hospital_vision/build/lib/hospital_vision/d435_transnode.py -> /home/hospital/hospital_ws/install/hospital_vision/lib/python3.10/site-packages/hospital_vision
+[1.041s] copying /home/hospital/hospital_ws/build/hospital_vision/build/lib/hospital_vision/d435_node.py -> /home/hospital/hospital_ws/install/hospital_vision/lib/python3.10/site-packages/hospital_vision
+[1.042s] byte-compiling /home/hospital/hospital_ws/install/hospital_vision/lib/python3.10/site-packages/hospital_vision/__init__.py to __init__.cpython-310.pyc
+[1.042s] byte-compiling /home/hospital/hospital_ws/install/hospital_vision/lib/python3.10/site-packages/hospital_vision/d435_node1.py to d435_node1.cpython-310.pyc
+[1.043s] byte-compiling /home/hospital/hospital_ws/install/hospital_vision/lib/python3.10/site-packages/hospital_vision/d435_transnode.py to d435_transnode.cpython-310.pyc
+[1.044s] byte-compiling /home/hospital/hospital_ws/install/hospital_vision/lib/python3.10/site-packages/hospital_vision/d435_node.py to d435_node.cpython-310.pyc
+[1.045s] running install_data
+[1.045s] copying resource/hospital_vision -> /home/hospital/hospital_ws/install/hospital_vision/share/ament_index/resource_index/packages
+[1.045s] copying package.xml -> /home/hospital/hospital_ws/install/hospital_vision/share/hospital_vision
+[1.045s] running install_egg_info
+[1.046s] Copying ../../build/hospital_vision/hospital_vision.egg-info to /home/hospital/hospital_ws/install/hospital_vision/lib/python3.10/site-packages/hospital_vision-0.0.0-py3.10.egg-info
+[1.047s] running install_scripts
+[1.059s] Installing d435_node script to /home/hospital/hospital_ws/install/hospital_vision/lib/hospital_vision
+[1.059s] Installing d435_node1 script to /home/hospital/hospital_ws/install/hospital_vision/lib/hospital_vision
+[1.060s] writing list of installed files to '/home/hospital/hospital_ws/build/hospital_vision/install.log'
+[1.085s] Invoked command in '/home/hospital/hospital_ws/src/hospital_vision' returned '0': PYTHONPATH=/home/hospital/hospital_ws/build/hospital_vision/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/hospital/hospital_ws/install/hospital_vision/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base ../../build/hospital_vision build --build-base /home/hospital/hospital_ws/build/hospital_vision/build install --record /home/hospital/hospital_ws/build/hospital_vision/install.log --single-version-externally-managed install_data --force

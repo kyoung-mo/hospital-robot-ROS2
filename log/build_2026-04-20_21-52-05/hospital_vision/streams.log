@@ -1,0 +1,18 @@
+[0.614s] Invoking command in '/home/hospital/hospital_ws/build/hospital_vision': PYTHONPATH=/home/hospital/hospital_ws/build/hospital_vision/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/hospital/hospital_ws/install/hospital_vision/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/hospital/hospital_ws/build/hospital_vision/build --no-deps symlink_data
+[0.751s] running develop
+[0.829s] running egg_info
+[0.829s] writing hospital_vision.egg-info/PKG-INFO
+[0.829s] writing dependency_links to hospital_vision.egg-info/dependency_links.txt
+[0.829s] writing entry points to hospital_vision.egg-info/entry_points.txt
+[0.829s] writing requirements to hospital_vision.egg-info/requires.txt
+[0.829s] writing top-level names to hospital_vision.egg-info/top_level.txt
+[0.831s] reading manifest file 'hospital_vision.egg-info/SOURCES.txt'
+[0.831s] writing manifest file 'hospital_vision.egg-info/SOURCES.txt'
+[0.831s] running build_ext
+[0.831s] Creating /home/hospital/hospital_ws/install/hospital_vision/lib/python3.10/site-packages/hospital-vision.egg-link (link to .)
+[0.832s] Installing d435_node script to /home/hospital/hospital_ws/install/hospital_vision/lib/hospital_vision
+[0.832s] Installing d435_node1 script to /home/hospital/hospital_ws/install/hospital_vision/lib/hospital_vision
+[0.832s] 
+[0.832s] Installed /home/hospital/hospital_ws/build/hospital_vision
+[0.832s] running symlink_data
+[0.851s] Invoked command in '/home/hospital/hospital_ws/build/hospital_vision' returned '0': PYTHONPATH=/home/hospital/hospital_ws/build/hospital_vision/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/hospital/hospital_ws/install/hospital_vision/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/hospital/hospital_ws/build/hospital_vision/build --no-deps symlink_data

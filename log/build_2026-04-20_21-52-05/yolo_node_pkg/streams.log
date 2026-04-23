@@ -1,0 +1,17 @@
+[0.606s] Invoking command in '/home/hospital/hospital_ws/build/yolo_node_pkg': PYTHONPATH=/home/hospital/hospital_ws/build/yolo_node_pkg/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/hospital/hospital_ws/install/yolo_node_pkg/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/hospital/hospital_ws/build/yolo_node_pkg/build --no-deps symlink_data
+[0.745s] running develop
+[0.824s] running egg_info
+[0.824s] writing yolo_node_pkg.egg-info/PKG-INFO
+[0.824s] writing dependency_links to yolo_node_pkg.egg-info/dependency_links.txt
+[0.824s] writing entry points to yolo_node_pkg.egg-info/entry_points.txt
+[0.825s] writing requirements to yolo_node_pkg.egg-info/requires.txt
+[0.825s] writing top-level names to yolo_node_pkg.egg-info/top_level.txt
+[0.825s] reading manifest file 'yolo_node_pkg.egg-info/SOURCES.txt'
+[0.825s] writing manifest file 'yolo_node_pkg.egg-info/SOURCES.txt'
+[0.826s] running build_ext
+[0.826s] Creating /home/hospital/hospital_ws/install/yolo_node_pkg/lib/python3.10/site-packages/yolo-node-pkg.egg-link (link to .)
+[0.826s] Installing yolo_node script to /home/hospital/hospital_ws/install/yolo_node_pkg/lib/yolo_node_pkg
+[0.827s] 
+[0.827s] Installed /home/hospital/hospital_ws/build/yolo_node_pkg
+[0.827s] running symlink_data
+[0.860s] Invoked command in '/home/hospital/hospital_ws/build/yolo_node_pkg' returned '0': PYTHONPATH=/home/hospital/hospital_ws/build/yolo_node_pkg/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/hospital/hospital_ws/install/yolo_node_pkg/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/hospital/hospital_ws/build/yolo_node_pkg/build --no-deps symlink_data
