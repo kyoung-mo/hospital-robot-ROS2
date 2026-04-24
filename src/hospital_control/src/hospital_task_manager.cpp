@@ -15,7 +15,7 @@ HospitalTaskManager::HospitalTaskManager() : Node("hospital_task_manager") {
     normal_call_sub_ = this->create_subscription<std_msgs::msg::String>(
         "/hospital/call/101", 10,
         std::bind(&HospitalTaskManager::normal_call_callback, this, std::placeholders::_1));
-    normal_call_sub_room2_ = this->create_subscription<std_msgs::msg::String>(
+    normal_call_sub_102_ = this->create_subscription<std_msgs::msg::String>(
         "/hospital/call/102", 10,
         std::bind(&HospitalTaskManager::normal_call_callback, this, std::placeholders::_1));
 
@@ -81,11 +81,15 @@ HospitalTaskManager::HospitalTaskManager() : Node("hospital_task_manager") {
     tts_trigger = this->create_publisher<std_msgs::msg::String>("/hospital/tts_trigger", 10);
 
     // [v6.2] emergency_event → 방번호별 분리
-    emergency_event_room1_ = this->create_publisher<std_msgs::msg::String>("/hospital/emergency_event/101", 10);
-    emergency_event_room2_ = this->create_publisher<std_msgs::msg::String>("/hospital/emergency_event/102", 10);
+    emergency_event_101_ = this->create_publisher<std_msgs::msg::String>("/hospital/emergency_event/101", 10);
+    emergency_event_102_ = this->create_publisher<std_msgs::msg::String>("/hospital/emergency_event/102", 10);
 
     r1_goal_pub_ = this->create_publisher<geometry_msgs::msg::PoseStamped>("/goal_pose", 10);
     r2_goal_pub_ = this->create_publisher<geometry_msgs::msg::PoseStamped>("/robot2/goal_pose", 10);
+
+    // yolo_node / Qt GUI에 현재 임무 위치 전달
+    r1_task_pub_ = this->create_publisher<std_msgs::msg::String>("/task_assignment", 10);
+    r2_task_pub_ = this->create_publisher<std_msgs::msg::String>("/robot2/task_assignment", 10);
 
 // 3. 타이머
     patrol_timer_ = this->create_wall_timer(
@@ -119,12 +123,12 @@ HospitalTaskManager::HospitalTaskManager() : Node("hospital_task_manager") {
 void HospitalTaskManager::publish_emergency_event(const std::string& room_id, const std::string& event_type) {
     auto msg = std_msgs::msg::String();
     msg.data = event_type;
-    if (room_id == "101") emergency_event_room1_->publish(msg);
-    else if (room_id == "102") emergency_event_room2_->publish(msg);
+    if (room_id == "101") emergency_event_101_->publish(msg);
+    else if (room_id == "102") emergency_event_102_->publish(msg);
     else {
         // 방 번호 불명확 시 양쪽 모두 발행
-        emergency_event_room1_->publish(msg);
-        emergency_event_room2_->publish(msg);
+        emergency_event_101_->publish(msg);
+        emergency_event_102_->publish(msg);
     }
 }
 
@@ -175,6 +179,12 @@ void HospitalTaskManager::send_nav_goal(std::string robot_id, std::string room_i
     if (robot_id == "robot_1") r1_goal_pub_->publish(goal_msg);
     else                        r2_goal_pub_->publish(goal_msg);
 
+    // yolo_node / Qt GUI에 현재 목적지 전달
+    auto task_msg = std_msgs::msg::String();
+    task_msg.data = room_id;
+    if (robot_id == "robot_1") r1_task_pub_->publish(task_msg);
+    else                        r2_task_pub_->publish(task_msg);
+
     fleet_status_[robot_id].is_busy = true;
     fleet_status_[robot_id].target_room = room_id;
     RCLCPP_INFO(this->get_logger(), "🚀 %s → %s", robot_id.c_str(), room_id.c_str());
@@ -222,7 +232,7 @@ void HospitalTaskManager::suspected_callback(const std_msgs::msg::String::Shared
     send_nav_goal(select_best_robot(msg->data, true), msg->data, true);
 }
 
-// 버튼 호출 (room1/room2 공통 콜백)
+// 버튼 호출 (101/102 공통 콜백)
 void HospitalTaskManager::normal_call_callback(const std_msgs::msg::String::SharedPtr msg) {
     std::string requested_room = msg->data;
     RCLCPP_INFO(this->get_logger(), "🔔 Normal Call: %s", requested_room.c_str());
@@ -365,6 +375,11 @@ void HospitalTaskManager::process_arrival_logic(std::string robot_id, std::strin
     if ((room_id == "S1" || room_id == "S2") && current_task_type == "IDLE") {
         RCLCPP_INFO(this->get_logger(), "🏠 %s 복귀 완료. 대기 모드.", my_station.c_str());
         fleet_status_[robot_id].is_busy = false;
+        // yolo_node / Qt GUI에 임무 없음 전달
+        auto idle_task_msg = std_msgs::msg::String();
+        idle_task_msg.data = "None";
+        if (robot_id == "robot_1") r1_task_pub_->publish(idle_task_msg);
+        else                        r2_task_pub_->publish(idle_task_msg);
         // [v6.1] last_patrol_time 갱신 위치: 스테이션 복귀 완료 시점
         last_patrol_time = std::chrono::steady_clock::now();
         return;

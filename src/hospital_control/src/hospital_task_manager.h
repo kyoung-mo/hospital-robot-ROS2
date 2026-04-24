@@ -75,8 +75,8 @@ private:
     // 구독자
     rclcpp::Subscription<std_msgs::msg::String>::SharedPtr emergency_sub_;
     rclcpp::Subscription<std_msgs::msg::String>::SharedPtr suspected_sub_;
-    rclcpp::Subscription<std_msgs::msg::String>::SharedPtr normal_call_sub_;        // /hospital/call/room1
-    rclcpp::Subscription<std_msgs::msg::String>::SharedPtr normal_call_sub_room2_;  // /hospital/call/room2
+    rclcpp::Subscription<std_msgs::msg::String>::SharedPtr normal_call_sub_;        // /hospital/call/101
+    rclcpp::Subscription<std_msgs::msg::String>::SharedPtr normal_call_sub_102_;  // /hospital/call/102
     rclcpp::Subscription<std_msgs::msg::String>::SharedPtr medicine_sub_;
     rclcpp::Subscription<std_msgs::msg::String>::SharedPtr waste_takeout_sub_;
     rclcpp::Subscription<std_msgs::msg::String>::SharedPtr waste_full_sub_;
@@ -87,10 +87,12 @@ private:
 
     // 퍼블리셔
     rclcpp::Publisher<std_msgs::msg::String>::SharedPtr tts_trigger;
-    rclcpp::Publisher<std_msgs::msg::String>::SharedPtr emergency_event_room1_;   // /hospital/emergency_event/room1
-    rclcpp::Publisher<std_msgs::msg::String>::SharedPtr emergency_event_room2_;   // /hospital/emergency_event/room2
+    rclcpp::Publisher<std_msgs::msg::String>::SharedPtr emergency_event_101_;   // /hospital/emergency_event/101
+    rclcpp::Publisher<std_msgs::msg::String>::SharedPtr emergency_event_102_;   // /hospital/emergency_event/102
     rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr r1_goal_pub_;   // /goal_pose (Topic 방식)
     rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr r2_goal_pub_;   // /robot2/goal_pose (bridge)
+    rclcpp::Publisher<std_msgs::msg::String>::SharedPtr r1_task_pub_;             // /task_assignment → yolo_node/Qt
+    rclcpp::Publisher<std_msgs::msg::String>::SharedPtr r2_task_pub_;             // /robot2/task_assignment → yolo_node/Qt
 
     // 데이터 관리
     std::map<std::string, std::vector<double>> room_map_;
