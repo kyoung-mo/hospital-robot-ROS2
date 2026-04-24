@@ -13,6 +13,7 @@
 #include "sensor_msgs/msg/battery_state.hpp"
 #include "geometry_msgs/msg/pose_with_covariance_stamped.hpp"
 #include "geometry_msgs/msg/pose_stamped.hpp"
+#include "turtlebot3_msgs/msg/sensor_state.hpp"
 
 #include "nav2_msgs/action/navigate_to_pose.hpp"
 #include "rclcpp_action/rclcpp_action.hpp"
@@ -37,52 +38,65 @@ private:
     double calculate_distance(geometry_msgs::msg::Pose robot_pose, std::vector<double> goal_coords);
     std::string select_best_robot(std::string room_id, bool is_emergency);
     void send_nav_goal(std::string robot_id, std::string room_id, bool is_emergency);
-    void patrol_scheduler(); // 배터리 기반 순찰 로봇 선정 로직
-
-    // 신규 추가된 로직 함수 선언 (빌드 에러 해결)
+    void patrol_scheduler();
     void check_arrival(std::string robot_id, geometry_msgs::msg::Pose current_pose);
     void process_arrival_logic(std::string robot_id, std::string room_id);
-    
-    //상태 관리 변수
-    std::string current_r1_location = "IDLE"; // 터틀봇1의 현재 위치 방 ID
-    std::string current_r2_location = "IDLE"; // 터틀봇2의 현재 위치 방 ID
-    bool robot1_is_interacting = false;       // 터틀봇1이 병실에서 STT/TTS 중인지 여부 [cite: 170]
-    std::string last_emergency_room = "";     // 비전 팀의 중복 신호 필터링용 변수
-    std::string current_task_type = "IDLE";      // "MEDICINE", "TRASH", "EMERGENCY" 등
-    std::string next_goal_after_arrival = "";    // 다음 목적지 예약
-    std::chrono::steady_clock::time_point start_arrival_time;
-    std::chrono::steady_clock::time_point last_patrol_time; // 빌드 에러 해결을 위해 추가
+    void publish_emergency_event(const std::string& room_id, const std::string& event_type);
 
-    // 콜백 함수 
-    void emergency_callback(const std_msgs::msg::String::SharedPtr msg); // 낙상 확정/긴급 버튼 [cite: 111, 113]
-    void suspected_callback(const std_msgs::msg::String::SharedPtr msg); // 낙상 의심 (D435) [cite: 111, 113]
-    void normal_call_callback(const std_msgs::msg::String::SharedPtr msg); // 일반 호출 [cite: 111, 113]
-    void medicine_callback(const std_msgs::msg::String::SharedPtr msg); // 약 요청 [cite: 113]
+    // 상태 관리 변수
+    std::string current_r1_location = "IDLE";
+    std::string current_r2_location = "IDLE";
+    bool robot1_is_interacting = false;
+    std::string last_emergency_room = "";
+    std::string current_task_type = "IDLE";    // "PATROL", "MEDICINE", "TRASH_VOICE", "TRASH_FULL", "EMERGENCY_WAIT", "IDLE"
+    std::string next_goal_after_arrival = "";
+
+    // 순찰 경로
+    std::vector<std::string> patrol_route_;    // 순찰 웨이포인트 배열
+    int patrol_index_ = 0;                     // 현재 순찰 인덱스
+    std::string patrol_robot_id_ = "";         // 순찰 중인 로봇 ID
+
+    // 긴급 상황 관련
+    bool buzzer_active_ = false;               // 내장 부저 활성 여부
+    std::string emergency_robot_id_ = "";      // 긴급 대기 중인 로봇 ID
+
+    std::chrono::steady_clock::time_point start_arrival_time;
+    std::chrono::steady_clock::time_point last_patrol_time;
+
+    // 콜백 함수
+    void emergency_callback(const std_msgs::msg::String::SharedPtr msg);
+    void suspected_callback(const std_msgs::msg::String::SharedPtr msg);
+    void normal_call_callback(const std_msgs::msg::String::SharedPtr msg);
+    void medicine_callback(const std_msgs::msg::String::SharedPtr msg);
     void trash_takeout_callback(const std_msgs::msg::String::SharedPtr msg);
     void waste_full_callback(const std_msgs::msg::String::SharedPtr msg);
     void nav_result_callback(const GoalHandleNav::WrappedResult & result, std::string robot_id, std::string room_id);
 
-    // 구독자, 퍼블리셔 멤버 변수
+    // 구독자
     rclcpp::Subscription<std_msgs::msg::String>::SharedPtr emergency_sub_;
     rclcpp::Subscription<std_msgs::msg::String>::SharedPtr suspected_sub_;
-    rclcpp::Subscription<std_msgs::msg::String>::SharedPtr normal_call_sub_;
+    rclcpp::Subscription<std_msgs::msg::String>::SharedPtr normal_call_sub_;        // /hospital/call/room1
+    rclcpp::Subscription<std_msgs::msg::String>::SharedPtr normal_call_sub_room2_;  // /hospital/call/room2
     rclcpp::Subscription<std_msgs::msg::String>::SharedPtr medicine_sub_;
     rclcpp::Subscription<std_msgs::msg::String>::SharedPtr waste_takeout_sub_;
     rclcpp::Subscription<std_msgs::msg::String>::SharedPtr waste_full_sub_;
     rclcpp::Subscription<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr r1_pose_sub_, r2_pose_sub_;
     rclcpp::Subscription<sensor_msgs::msg::BatteryState>::SharedPtr r1_battery_sub_, r2_battery_sub_;
+    rclcpp::Subscription<turtlebot3_msgs::msg::SensorState>::SharedPtr r1_sensor_state_sub_;
+    // TODO: r2_sensor_state_sub_ → bridge_config.yaml에 sensor_state 토픽 추가 필요
 
-    rclcpp::Publisher<std_msgs::msg::String>::SharedPtr tts_trigger; // 도착 후 TTS 실행 [cite: 141]
-    rclcpp::Publisher<std_msgs::msg::String>::SharedPtr emergency_event; // micro-ROS LED 제어 [cite: 140]
-    
-    //rclcpp_action::Client<NavigateToPose>::SharedPtr r1_nav_client_, r2_nav_client_; //->Action 기반
-    rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr r1_goal_pub_, r2_goal_pub_; //->Topic 기반
-    
+    // 퍼블리셔
+    rclcpp::Publisher<std_msgs::msg::String>::SharedPtr tts_trigger;
+    rclcpp::Publisher<std_msgs::msg::String>::SharedPtr emergency_event_room1_;   // /hospital/emergency_event/room1
+    rclcpp::Publisher<std_msgs::msg::String>::SharedPtr emergency_event_room2_;   // /hospital/emergency_event/room2
+    rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr r1_goal_pub_;   // /goal_pose (Topic 방식)
+    rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr r2_goal_pub_;   // /robot2/goal_pose (bridge)
+
     // 데이터 관리
     std::map<std::string, std::vector<double>> room_map_;
     std::map<std::string, RobotStatus> fleet_status_;
     geometry_msgs::msg::Pose r1_pose_, r2_pose_;
-    rclcpp::TimerBase::SharedPtr patrol_timer_; // 10초 주기 순찰 판단 타이머 [cite: 147]
+    rclcpp::TimerBase::SharedPtr patrol_timer_;
 };
 
 #endif  // HOSPITAL_TASK_MANAGER_H_

@@ -13,6 +13,7 @@ find_package(rclcpp_action REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED) 
 find_package(sensor_msgs REQUIRED)
+find_package(turtlebot3_msgs REQUIRED)
 
 add_executable(hospital_task_manager src/hospital_task_manager.cpp)
 ament_target_dependencies(hospital_task_manager
@@ -22,6 +23,7 @@ ament_target_dependencies(hospital_task_manager
   std_msgs
   geometry_msgs
   sensor_msgs
+  turtlebot3_msgs  # ← 여기 추가
 )
 
 if(BUILD_TESTING)
