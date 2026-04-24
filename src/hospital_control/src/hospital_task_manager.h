@@ -22,8 +22,6 @@ struct RobotStatus {
     bool is_busy = false;
     std::string current_task = "IDLE";
     float battery_level = 0.0f;
-
-    std::string target_room = ""; //현재 이동 중인 방 이름 추가 (도메인 브릿지)
 };
 
 class HospitalTaskManager : public rclcpp::Node {
@@ -44,13 +42,18 @@ private:
     bool robot1_is_interacting = false;       // 터틀봇1이 병실에서 STT/TTS 중인지 여부 [cite: 170]
     std::string last_emergency_room = "";     // 비전 팀의 중복 신호 필터링용 변수
 
-    std::chrono::steady_clock::time_point last_patrol_time;
+    std::string current_task_type = "IDLE";      // "MEDICINE", "TRASH", "EMERGENCY" 등
+    std::string next_goal_after_arrival = "";    // 다음 목적지 예약
+
+    std::chrono::steady_clock::time_point start_arrival_time;
 
     // 콜백 함수 
     void emergency_callback(const std_msgs::msg::String::SharedPtr msg); // 낙상 확정/긴급 버튼 [cite: 111, 113]
     void suspected_callback(const std_msgs::msg::String::SharedPtr msg); // 낙상 의심 (D435) [cite: 111, 113]
     void normal_call_callback(const std_msgs::msg::String::SharedPtr msg); // 일반 호출 [cite: 111, 113]
     void medicine_callback(const std_msgs::msg::String::SharedPtr msg); // 약 요청 [cite: 113]
+    void trash_takeout_callback(const std_msgs::msg::String::SharedPtr msg);
+    void waste_full_callback(const std_msgs::msg::String::SharedPtr msg);
     void nav_result_callback(const GoalHandleNav::WrappedResult & result, std::string robot_id, std::string room_id);
 
     // 구독자, 퍼블리셔 멤버 변수
@@ -58,6 +61,8 @@ private:
     rclcpp::Subscription<std_msgs::msg::String>::SharedPtr suspected_sub_;
     rclcpp::Subscription<std_msgs::msg::String>::SharedPtr normal_call_sub_;
     rclcpp::Subscription<std_msgs::msg::String>::SharedPtr medicine_sub_;
+    rclcpp::Subscription<std_msgs::msg::String>::SharedPtr waste_takeout_sub_;
+    rclcpp::Subscription<std_msgs::msg::String>::SharedPtr waste_full_sub_;
     rclcpp::Subscription<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr r1_pose_sub_, r2_pose_sub_;
     rclcpp::Subscription<sensor_msgs::msg::BatteryState>::SharedPtr r1_battery_sub_, r2_battery_sub_;
 
