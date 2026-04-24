@@ -12,11 +12,11 @@ HospitalTaskManager::HospitalTaskManager() : Node("hospital_task_manager") {
         std::bind(&HospitalTaskManager::suspected_callback, this, std::placeholders::_1));
 
     // [v6.2] /hospital/call → 방번호별 분리
-    normal_call_sub_room1_ = this->create_subscription<std_msgs::msg::String>(
-        "/hospital/call/room1", 10,
+    normal_call_sub_ = this->create_subscription<std_msgs::msg::String>(
+        "/hospital/call/101", 10,
         std::bind(&HospitalTaskManager::normal_call_callback, this, std::placeholders::_1));
     normal_call_sub_room2_ = this->create_subscription<std_msgs::msg::String>(
-        "/hospital/call/room2", 10,
+        "/hospital/call/102", 10,
         std::bind(&HospitalTaskManager::normal_call_callback, this, std::placeholders::_1));
 
     medicine_sub_ = this->create_subscription<std_msgs::msg::String>(
@@ -81,8 +81,8 @@ HospitalTaskManager::HospitalTaskManager() : Node("hospital_task_manager") {
     tts_trigger = this->create_publisher<std_msgs::msg::String>("/hospital/tts_trigger", 10);
 
     // [v6.2] emergency_event → 방번호별 분리
-    emergency_event_room1_ = this->create_publisher<std_msgs::msg::String>("/hospital/emergency_event/room1", 10);
-    emergency_event_room2_ = this->create_publisher<std_msgs::msg::String>("/hospital/emergency_event/room2", 10);
+    emergency_event_room1_ = this->create_publisher<std_msgs::msg::String>("/hospital/emergency_event/101", 10);
+    emergency_event_room2_ = this->create_publisher<std_msgs::msg::String>("/hospital/emergency_event/102", 10);
 
     r1_goal_pub_ = this->create_publisher<geometry_msgs::msg::PoseStamped>("/goal_pose", 10);
     r2_goal_pub_ = this->create_publisher<geometry_msgs::msg::PoseStamped>("/robot2/goal_pose", 10);
@@ -154,6 +154,11 @@ void HospitalTaskManager::check_arrival(std::string robot_id, geometry_msgs::msg
 
 // 최적 로봇 선정
 std::string HospitalTaskManager::select_best_robot(std::string room_id, bool is_emergency) {
+    // 방어 코드: room_map에 없는 키 접근 방지 (segfault 예방)
+    if (room_map_.find(room_id) == room_map_.end()) {
+        RCLCPP_ERROR(this->get_logger(), "select_best_robot: Unknown room_id: %s", room_id.c_str());
+        return "robot_1";
+    }
     double d1 = calculate_distance(r1_pose_, room_map_[room_id]);
     double d2 = calculate_distance(r2_pose_, room_map_[room_id]);
     if (is_emergency) return (d1 <= d2) ? "robot_1" : "robot_2";
@@ -228,11 +233,21 @@ void HospitalTaskManager::emergency_callback(const std_msgs::msg::String::Shared
 
 // 낙상 의심 (D435) → 가까운 로봇 파견
 void HospitalTaskManager::suspected_callback(const std_msgs::msg::String::SharedPtr msg) {
+    // 중복 필터: 두 로봇 모두 바쁘면 무시
+    if (fleet_status_["robot_1"].is_busy && fleet_status_["robot_2"].is_busy) {
+        RCLCPP_WARN(this->get_logger(), "⚠️ All robots busy, ignoring fall suspected.");
+        return;
+    }
+    // room_map에 없는 방이면 무시
+    if (room_map_.find(msg->data) == room_map_.end()) {
+        RCLCPP_WARN(this->get_logger(), "⚠️ Fall Suspected: Unknown room_id: %s", msg->data.c_str());
+        return;
+    }
     RCLCPP_WARN(this->get_logger(), "⚠️ Fall Suspected (D435): %s", msg->data.c_str());
     send_nav_goal(select_best_robot(msg->data, true), msg->data, true);
 }
 
-// 버튼 호출 (101/102 공통 콜백)
+// 버튼 호출 (room1/room2 공통 콜백)
 void HospitalTaskManager::normal_call_callback(const std_msgs::msg::String::SharedPtr msg) {
     std::string requested_room = msg->data;
     RCLCPP_INFO(this->get_logger(), "🔔 Normal Call: %s", requested_room.c_str());
