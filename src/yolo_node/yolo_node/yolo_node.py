@@ -12,11 +12,11 @@ class PoseNode(Node):
     def __init__(self):
         super().__init__('yolo_node')
 
-        # 1. 로봇 ID 파라미터 (실행 시 설정: robot_1 또는 robot_2)
+        # 1. 로봇 ID 파라미터
         self.robot_id = self.declare_parameter('robot_id', 'robot_1').value
         self.get_logger().info(f"🤖 Starting YOLO Node for: {self.robot_id}")
 
-        # 2. YOLO 모델 로드 (GPU 우선)
+        # 2. YOLO 모델 로드
         try:
             self.model = YOLO("yolo11n-pose.engine")
             self.get_logger().info("🚀 YOLO11 Engine Loaded on GPU")
@@ -28,9 +28,10 @@ class PoseNode(Node):
         self.current_location = "Corridor"
         self.latest_frame = None
         self.last_publish_time = 0
+        self.emergency_sent = False  # ✅ 중복 발행 방지 플래그 추가
         self.lock = threading.Lock()
 
-        # 4. QoS 설정 (이미지 전송 최적화)
+        # 4. QoS 설정
         from rclpy.qos import QoSProfile, ReliabilityPolicy, HistoryPolicy
         qos_profile = QoSProfile(
             reliability=ReliabilityPolicy.BEST_EFFORT,
@@ -38,8 +39,7 @@ class PoseNode(Node):
             depth=1
         )
 
-        # 5. 구독자 설정 (C++ Task Manager 토픽 이름과 매칭)
-        # 카메라 영상 구독
+        # 5. 구독자 설정
         self.sub_img = self.create_subscription(
             CompressedImage,
             f'/{self.robot_id}/camera/image_raw/compressed',
@@ -47,9 +47,7 @@ class PoseNode(Node):
             qos_profile
         )
 
-        # ✅ [중요] 친구의 C++ 코드 토픽 이름 규칙에 맞춤
         task_topic = "/task_assignment" if self.robot_id == "robot_1" else "/robot2/task_assignment"
-        
         self.sub_task = self.create_subscription(
             String,
             task_topic,
@@ -66,7 +64,6 @@ class PoseNode(Node):
         self.inference_thread.start()
 
     def task_callback(self, msg):
-        """ Task Manager로부터 받은 목적지를 화면에 표시하기 위해 저장 """
         task_data = msg.data
         if task_data == "None" or not task_data:
             self.current_location = "Corridor"
@@ -75,7 +72,6 @@ class PoseNode(Node):
         self.get_logger().info(f"📍 [{self.robot_id}] Location Updated: {self.current_location}")
 
     def image_callback(self, msg):
-        """ 압축 이미지 디코딩 및 프레임 최신화 """
         try:
             np_arr = np.frombuffer(msg.data, np.uint8)
             frame = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
@@ -98,9 +94,10 @@ class PoseNode(Node):
                 continue
 
             try:
-                # YOLO 추론 (GPU 사용)
                 results = self.model.predict(frame, verbose=False, device=0)
                 annotated_frame = frame.copy()
+                
+                fall_detected_in_frame = False # 이번 프레임에서 낙상이 있는지 확인용
 
                 for r in results:
                     annotated_frame = r.plot()
@@ -110,25 +107,40 @@ class PoseNode(Node):
                     for person in keypoints:
                         if len(person) < 17: continue
 
-                        # 낙상 판별 알고리즘 (임계값 조절 가능)
+                        # 낙상 판별 (머리와 골반의 높이 차이)
                         head_y = person[0][1]
                         hip_y = (person[11][1] + person[12][1]) / 2
                         height_diff = abs(head_y - hip_y)
 
+                        # 임계값: 너무 작으면 누워있는 것으로 판단
                         if 0.1 < height_diff < 30.0:
+                            fall_detected_in_frame = True
+                            
                             now = time.time()
-                            if now - self.last_publish_time > 3.0:
-                                # 낙상 발생 시 현재 위치(Task Manager가 준 곳)를 포함해 전송
+                            # ✅ 수정: 아직 안 보냈고, 마지막 보낸지 3초가 넘었을 때만 실행
+                            if not self.emergency_sent and (now - self.last_publish_time > 3.0):
                                 msg_out = String()
                                 msg_out.data = self.current_location
                                 self.fall_pub.publish(msg_out)
-                                self.get_logger().error(f"🚨 [FALL DETECTED] at {self.current_location}")
+                                
+                                self.emergency_sent = True # ✅ 보냈음 상태로 변경
                                 self.last_publish_time = now
+                                self.get_logger().error(f"🚨 [FALL DETECTED] at {self.current_location} - Signal Sent")
 
-                # 화면 상단에 로봇 정보 및 현재 목표 위치 표시
+                # ✅ 이번 프레임에 낙상 대상이 없으면 상태 리셋 (다시 보낼 수 있게 준비)
+                if not fall_detected_in_frame:
+                    if self.emergency_sent:
+                        self.get_logger().info(f"✅ Fall Situation Cleared at {self.current_location}")
+                    self.emergency_sent = False
+
+                # 화면 표시
                 display_text = f"[{self.robot_id}] LOC: {self.current_location}"
+                if self.emergency_sent:
+                    display_text += " | STATE: EMERGENCY"
+                    cv2.rectangle(annotated_frame, (0,0), (640, 480), (0,0,255), 10) # 감지 시 빨간 테두리
+                
                 cv2.putText(annotated_frame, display_text, (20, 45), 
-                            cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0, 0, 255), 2)
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 255), 2)
 
                 # 시각화 영상 퍼블리시
                 if self.viz_pub.get_subscription_count() > 0:
