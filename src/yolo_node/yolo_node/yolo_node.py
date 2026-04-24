@@ -1,209 +1,150 @@
 import rclpy
 from rclpy.node import Node
-from sensor_msgs.msg import Image
+from sensor_msgs.msg import CompressedImage
 from std_msgs.msg import String
-from cv_bridge import CvBridge
-import pyrealsense2 as rs
-import numpy as np
 import cv2
+from ultralytics import YOLO
+import numpy as np
 import time
+import threading
 
-class D435Node(Node):
+class PoseNode(Node):
     def __init__(self):
-        super().__init__('d435_node')
-        self.bridge = CvBridge()
+        super().__init__('yolo_node')
 
-        # 퍼블리셔 설정
-        self.fall_pub = self.create_publisher(String, '/hospital/fall_suspected', 10)
-        self.facility_pub = self.create_publisher(String, '/hospital/facility_status', 10)
-        self.viz_pub = self.create_publisher(Image, '/camera/viz/image_raw', 10)
+        # 1. 로봇 ID 파라미터 (실행 시 설정: robot_1 또는 robot_2)
+        self.robot_id = self.declare_parameter('robot_id', 'robot_1').value
+        self.get_logger().info(f"🤖 Starting YOLO Node for: {self.robot_id}")
 
-        # 리얼센스 설정
+        # 2. YOLO 모델 로드 (GPU 우선)
         try:
-            self.pipeline = rs.pipeline()
-            self.config = rs.config()
-            self.config.enable_stream(rs.stream.color, 640, 480, rs.format.bgr8, 15)
-            self.config.enable_stream(rs.stream.depth, 640, 480, rs.format.z16, 15)
-            self.pipeline.start(self.config)
-            self.align = rs.align(rs.stream.color)
-        except Exception as e:
-            self.get_logger().error(f"RealSense Init Error: {e}")
-
-        # 상태 변수
-        self.fall_status_r1 = "NONE"
-        self.fall_status_r2 = "NONE"
-        self.waste_status = {"101": "OK", "102": "OK"}
-        self.waste_pub_count = {"101": 0, "102": 0}
-        self.waste_last_pub_time = {"101": 0.0, "102": 0.0}
-        
-        self.depths = {
-            "101_bed": 0.0, "101_waste": 0.0,
-            "102_bed": 0.0, "102_waste": 0.0
-        }
-
-        self.timer = self.create_timer(1.0/15.0, self.process_frames)
-        self.get_logger().info("✅ D435 Node Started — ROI Optimized Mode")
-
-    def get_roi_depth(self, roi):
-        flat = roi.flatten()
-        flat = flat[~np.isnan(flat)]
-        if len(flat) > 0:
-            return float(np.nanmedian(flat))
-        return np.nan
-
-    def process_frames(self):
-        try:
-            frames = self.pipeline.wait_for_frames()
-            aligned = self.align.process(frames)
-            color_frame = aligned.get_color_frame()
-            depth_frame = aligned.get_depth_frame()
-
-            if not color_frame or not depth_frame:
-                return
-
-            color = np.asanyarray(color_frame.get_data())
-            depth = np.asanyarray(depth_frame.get_data()).astype(np.float32)
-            depth[depth == 0] = np.nan
-
-            h, w = depth.shape
-
-            # ROI 영역 설정 (화면 4분할 기반) - 인덱싱 정수 변환 포함
-            rois = {
-                "101_bed":   depth[0:h//2,                  w//4:w//2],
-                "102_bed":   depth[0:h//2,                  w//2:3*w//4],
-                "101_waste": depth[h//2:h//2+(h//2)*2//3,   w//4+40:w//2-40],
-                "102_waste": depth[h//2:h//2+(h//2)*2//3,   w//2+40:3*w//4-40],
-            }
-
-            for key, roi in rois.items():
-                self.depths[key] = self.get_roi_depth(roi)
-
-            self.check_waste()
-            self.check_fall()
-            self.publish_viz(color, h, w)
-        except Exception as e:
-            self.get_logger().error(f"Frame Error: {e}")
-
-    def check_waste(self):
-        now = time.time()
-        for room in ["101", "102"]:
-            depth_key = f"{room}_waste"
-            prev = self.waste_status[room]
-
-            # 750mm 보다 가까우면 꽉 찬 것으로 판단
-            if not np.isnan(self.depths[depth_key]) and self.depths[depth_key] < 750:
-                if prev != "FULL":
-                    self.waste_status[room] = "FULL"
-                    self.waste_pub_count[room] = 0
-                    self.get_logger().warn(f"⚠️ ROOM {room} WASTE FULL!")
-
-                if self.waste_pub_count[room] < 5 and (now - self.waste_last_pub_time[room]) >= 1.0:
-                    msg = String()
-                    msg.data = f"{room}_WASTE_FULL"
-                    self.facility_pub.publish(msg)
-                    self.waste_pub_count[room] += 1
-                    self.waste_last_pub_time[room] = now
-            else:
-                self.waste_status[room] = "OK"
-                self.waste_pub_count[room] = 0
-
-    def check_fall(self):
-        FALL_THRESHOLD = 750
-        
-        # 101 낙상 판단
-        bed1 = self.depths["101_bed"]
-        prev1 = self.fall_status_r1
-        if not np.isnan(bed1) and bed1 > FALL_THRESHOLD:
-            self.fall_status_r1 = "SUSPECTED"
-            msg = String()
-            msg.data = "101"
-            self.fall_pub.publish(msg)
-            if prev1 != "SUSPECTED": 
-                self.get_logger().warn("🚨 101 FALL 감지!")
-        else:
-            self.fall_status_r1 = "NONE"
-
-        # 102 낙상 판단
-        bed2 = self.depths["102_bed"]
-        prev2 = self.fall_status_r2
-        if not np.isnan(bed2) and bed2 > FALL_THRESHOLD:
-            self.fall_status_r2 = "SUSPECTED"
-            msg = String()
-            msg.data = "102"
-            self.fall_pub.publish(msg)
-            if prev2 != "SUSPECTED": 
-                self.get_logger().warn("🚨 102 FALL 감지!")
-        else:
-            self.fall_status_r2 = "NONE"
-
-    def publish_viz(self, color, h, w):
-        viz = color.copy()
-        blink = int(time.time() * 2) % 2 == 0
-
-        # 구역 오버레이 (낙상/쓰레기통) - 좌표 정수형 변환 필수
-        if self.fall_status_r1 == "SUSPECTED" and blink:
-            overlay = viz.copy()
-            cv2.rectangle(overlay, (int(w//4), 0), (int(w//2), int(h//2)), (0, 0, 255), -1)
-            viz = cv2.addWeighted(overlay, 0.4, viz, 0.6, 0)
-            
-        if self.fall_status_r2 == "SUSPECTED" and blink:
-            overlay = viz.copy()
-            cv2.rectangle(overlay, (int(w//2), 0), (int(3*w//4), int(h//2)), (0, 0, 255), -1)
-            viz = cv2.addWeighted(overlay, 0.4, viz, 0.6, 0)
-            
-        if self.waste_status["101"] == "FULL" and blink:
-            overlay = viz.copy()
-            cv2.rectangle(overlay, (int(w//4), int(h//2)), (int(w//2), int(h)), (0, 165, 255), -1)
-            viz = cv2.addWeighted(overlay, 0.4, viz, 0.6, 0)
-            
-        if self.waste_status["102"] == "FULL" and blink:
-            overlay = viz.copy()
-            cv2.rectangle(overlay, (int(w//2), int(h//2)), (int(3*w//4), int(h)), (0, 255, 0), -1)
-            viz = cv2.addWeighted(overlay, 0.4, viz, 0.6, 0)
-
-        # 가이드 라인 및 박스 테두리
-        cv2.line(viz, (int(w//2), 0), (int(w//2), int(h)), (255, 255, 255), 2)
-        cv2.line(viz, (0, int(h//2)), (int(w), int(h//2)), (255, 255, 255), 2)
-        cv2.rectangle(viz, (int(w//4), 0), (int(w//2), int(h//2)), (0, 0, 255), 2)
-        cv2.rectangle(viz, (int(w//2), 0), (int(3*w//4), int(h//2)), (255, 0, 0), 2)
-        cv2.rectangle(viz, (int(w//4), int(h//2)), (int(w//2), int(h)), (0, 165, 255), 2)
-        cv2.rectangle(viz, (int(w//2), int(h//2)), (int(3*w//4), int(h)), (0, 255, 0), 2)
-
-        def safe(key):
-            v = self.depths[key]
-            return f"{v:.0f}mm" if not np.isnan(v) else "---"
-
-        # 텍스트 출력
-        cv2.putText(viz, f"101 Bed: {safe('101_bed')}", (int(w//4+5), 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
-        cv2.putText(viz, f"102 Bed: {safe('102_bed')}", (int(w//2+5), 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 0, 0), 2)
-        cv2.putText(viz, f"101 Waste: {safe('101_waste')}", (int(w//4+5), int(h//2+30)), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 165, 255), 2)
-        cv2.putText(viz, f"102 Waste: {safe('102_waste')}", (int(w//2+5), int(h//2+30)), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
-
-        # 상태 텍스트
-        if self.fall_status_r1 == "SUSPECTED":
-            cv2.putText(viz, "101 FALL!", (10, int(h//4)), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 255), 2)
-        if self.fall_status_r2 == "SUSPECTED":
-            cv2.putText(viz, "102 FALL!", (int(3*w//4+5), int(h//4)), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 255), 2)
-        if self.waste_status["101"] == "FULL":
-            cv2.putText(viz, "101 WASTE FULL!", (10, int(h//2+h//4)), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 165, 255), 2)
-        if self.waste_status["102"] == "FULL":
-            cv2.putText(viz, "102 WASTE FULL!", (int(3*w//4+5), int(h//2+h//4)), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
-
-        # 이미지 발행
-        msg = self.bridge.cv2_to_imgmsg(viz, encoding="bgr8")
-        msg.header.stamp = self.get_clock().now().to_msg()
-        self.viz_pub.publish(msg)
-
-    def destroy_node(self):
-        try:
-            self.pipeline.stop()
+            self.model = YOLO("yolo11n-pose.engine")
+            self.get_logger().info("🚀 YOLO11 Engine Loaded on GPU")
         except:
-            pass
-        super().destroy_node()
+            self.model = YOLO("yolo11n-pose.pt").to('cuda')
+            self.get_logger().warn("⚠️ Engine file not found. Using .pt on CUDA")
+
+        # 3. 상태 변수
+        self.current_location = "Corridor"
+        self.latest_frame = None
+        self.last_publish_time = 0
+        self.lock = threading.Lock()
+
+        # 4. QoS 설정 (이미지 전송 최적화)
+        from rclpy.qos import QoSProfile, ReliabilityPolicy, HistoryPolicy
+        qos_profile = QoSProfile(
+            reliability=ReliabilityPolicy.BEST_EFFORT,
+            history=HistoryPolicy.KEEP_LAST,
+            depth=1
+        )
+
+        # 5. 구독자 설정 (C++ Task Manager 토픽 이름과 매칭)
+        # 카메라 영상 구독
+        self.sub_img = self.create_subscription(
+            CompressedImage,
+            f'/{self.robot_id}/camera/image_raw/compressed',
+            self.image_callback,
+            qos_profile
+        )
+
+        # ✅ [중요] 친구의 C++ 코드 토픽 이름 규칙에 맞춤
+        task_topic = "/task_assignment" if self.robot_id == "robot_1" else "/robot2/task_assignment"
+        
+        self.sub_task = self.create_subscription(
+            String,
+            task_topic,
+            self.task_callback,
+            10
+        )
+
+        # 6. 퍼블리셔 설정
+        self.fall_pub = self.create_publisher(String, '/hospital/emergency_call', 10)
+        self.viz_pub = self.create_publisher(CompressedImage, f'/hospital/yolo_viz/{self.robot_id}/compressed', 1)
+
+        # 7. 추론 스레드 실행
+        self.inference_thread = threading.Thread(target=self.inference_loop, daemon=True)
+        self.inference_thread.start()
+
+    def task_callback(self, msg):
+        """ Task Manager로부터 받은 목적지를 화면에 표시하기 위해 저장 """
+        task_data = msg.data
+        if task_data == "None" or not task_data:
+            self.current_location = "Corridor"
+        else:
+            self.current_location = task_data
+        self.get_logger().info(f"📍 [{self.robot_id}] Location Updated: {self.current_location}")
+
+    def image_callback(self, msg):
+        """ 압축 이미지 디코딩 및 프레임 최신화 """
+        try:
+            np_arr = np.frombuffer(msg.data, np.uint8)
+            frame = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
+            if frame is not None:
+                with self.lock:
+                    self.latest_frame = frame
+        except Exception as e:
+            self.get_logger().error(f"Image Decode Error: {e}")
+
+    def inference_loop(self):
+        while rclpy.ok():
+            frame = None
+            with self.lock:
+                if self.latest_frame is not None:
+                    frame = self.latest_frame.copy()
+                    self.latest_frame = None
+
+            if frame is None:
+                time.sleep(0.01)
+                continue
+
+            try:
+                # YOLO 추론 (GPU 사용)
+                results = self.model.predict(frame, verbose=False, device=0)
+                annotated_frame = frame.copy()
+
+                for r in results:
+                    annotated_frame = r.plot()
+                    if r.keypoints is None: continue
+
+                    keypoints = r.keypoints.xy.cpu().numpy()
+                    for person in keypoints:
+                        if len(person) < 17: continue
+
+                        # 낙상 판별 알고리즘 (임계값 조절 가능)
+                        head_y = person[0][1]
+                        hip_y = (person[11][1] + person[12][1]) / 2
+                        height_diff = abs(head_y - hip_y)
+
+                        if 0.1 < height_diff < 30.0:
+                            now = time.time()
+                            if now - self.last_publish_time > 3.0:
+                                # 낙상 발생 시 현재 위치(Task Manager가 준 곳)를 포함해 전송
+                                msg_out = String()
+                                msg_out.data = self.current_location
+                                self.fall_pub.publish(msg_out)
+                                self.get_logger().error(f"🚨 [FALL DETECTED] at {self.current_location}")
+                                self.last_publish_time = now
+
+                # 화면 상단에 로봇 정보 및 현재 목표 위치 표시
+                display_text = f"[{self.robot_id}] LOC: {self.current_location}"
+                cv2.putText(annotated_frame, display_text, (20, 45), 
+                            cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0, 0, 255), 2)
+
+                # 시각화 영상 퍼블리시
+                if self.viz_pub.get_subscription_count() > 0:
+                    _, buf = cv2.imencode('.jpg', annotated_frame, [cv2.IMWRITE_JPEG_QUALITY, 70])
+                    viz_msg = CompressedImage()
+                    viz_msg.header.stamp = self.get_clock().now().to_msg()
+                    viz_msg.format = 'jpeg'
+                    viz_msg.data = buf.tobytes()
+                    self.viz_pub.publish(viz_msg)
+
+            except Exception as e:
+                self.get_logger().error(f"Inference Error: {e}")
 
 def main(args=None):
     rclpy.init(args=args)
-    node = D435Node()
+    node = PoseNode()
     try:
         rclpy.spin(node)
     except KeyboardInterrupt:
