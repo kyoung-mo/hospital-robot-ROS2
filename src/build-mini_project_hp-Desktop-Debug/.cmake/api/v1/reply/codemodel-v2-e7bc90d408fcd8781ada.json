@@ -1,0 +1,88 @@
+{
+	"configurations" : 
+	[
+		{
+			"directories" : 
+			[
+				{
+					"build" : ".",
+					"hasInstallRule" : true,
+					"jsonFile" : "directory-.-Debug-a8bb014bd5a7832c88e5.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.16"
+					},
+					"projectIndex" : 0,
+					"source" : ".",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2,
+						3
+					]
+				}
+			],
+			"name" : "Debug",
+			"projects" : 
+			[
+				{
+					"directoryIndexes" : 
+					[
+						0
+					],
+					"name" : "mini_project_hp",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2,
+						3
+					]
+				}
+			],
+			"targets" : 
+			[
+				{
+					"directoryIndex" : 0,
+					"id" : "mini_project_hp::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-mini_project_hp-Debug-909145b01a2442e12d13.json",
+					"name" : "mini_project_hp",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "mini_project_hp_autogen::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-mini_project_hp_autogen-Debug-0035fa66f1ddcfbdb204.json",
+					"name" : "mini_project_hp_autogen",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "mini_project_hp_uninstall::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-mini_project_hp_uninstall-Debug-30592a80562deb42a327.json",
+					"name" : "mini_project_hp_uninstall",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "uninstall::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-uninstall-Debug-04077b94601eddecd88e.json",
+					"name" : "uninstall",
+					"projectIndex" : 0
+				}
+			]
+		}
+	],
+	"kind" : "codemodel",
+	"paths" : 
+	{
+		"build" : "/home/hospital/hospital-kym/src/build-mini_project_hp-Desktop-Debug",
+		"source" : "/home/hospital/hospital-kym/src/mini_project_hp"
+	},
+	"version" : 
+	{
+		"major" : 2,
+		"minor" : 3
+	}
+}

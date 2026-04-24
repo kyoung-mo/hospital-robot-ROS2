@@ -1,0 +1,11 @@
+/home/hospital/hospital-kym/src/build-mini_project_hp-Desktop-Debug/CMakeFiles/uninstall.dir
+/home/hospital/hospital-kym/src/build-mini_project_hp-Desktop-Debug/CMakeFiles/mini_project_hp_uninstall.dir
+/home/hospital/hospital-kym/src/build-mini_project_hp-Desktop-Debug/CMakeFiles/mini_project_hp.dir
+/home/hospital/hospital-kym/src/build-mini_project_hp-Desktop-Debug/CMakeFiles/test.dir
+/home/hospital/hospital-kym/src/build-mini_project_hp-Desktop-Debug/CMakeFiles/edit_cache.dir
+/home/hospital/hospital-kym/src/build-mini_project_hp-Desktop-Debug/CMakeFiles/rebuild_cache.dir
+/home/hospital/hospital-kym/src/build-mini_project_hp-Desktop-Debug/CMakeFiles/list_install_components.dir
+/home/hospital/hospital-kym/src/build-mini_project_hp-Desktop-Debug/CMakeFiles/install.dir
+/home/hospital/hospital-kym/src/build-mini_project_hp-Desktop-Debug/CMakeFiles/install/local.dir
+/home/hospital/hospital-kym/src/build-mini_project_hp-Desktop-Debug/CMakeFiles/install/strip.dir
+/home/hospital/hospital-kym/src/build-mini_project_hp-Desktop-Debug/CMakeFiles/mini_project_hp_autogen.dir
