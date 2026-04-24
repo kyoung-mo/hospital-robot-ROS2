@@ -35,8 +35,10 @@ public slots:
     void handleEvent(QString type, QString message);
 
 private:
-    QLabel *mapView, *d435View, *tb1View, *r1Status;
-    QProgressBar *r1BattBar;
+    // UI 위젯 (로봇 2번용 tb2View, r2Status, r2BattBar 추가)
+    QLabel *mapView, *d435View, *tb1View, *tb2View;
+    QLabel *r1Status, *r2Status;
+    QProgressBar *r1BattBar, *r2BattBar;
     QListWidget *logList;
     QPushButton *drawBtn, *clearBtn, *patrolBtn;
 
@@ -44,14 +46,25 @@ private:
     RosThread *rosThread;
     QPixmap mapPixmap;
 
-    // 로봇의 시작 좌표: S1 위치 (4.437, -0.969)
+    // 제어 대상 로봇 선택 (기본값 1번 로봇)
+    int selectedRobotId = 1;
+
+    // 로봇 1번 데이터
     double r1x = 4.437;
     double r1y = -0.969;
     QString r1Target = "IDLE";
-
     std::vector<Point> r1PatrolPath;
     int r1PatrolIdx = 0;
     bool r1IsPatrolling = false;
+
+    // 로봇 2번 데이터 (추가됨)
+    double r2x = 4.437;
+    double r2y = -0.969;
+    QString r2Target = "IDLE";
+    std::vector<Point> r2PatrolPath;
+    int r2PatrolIdx = 0;
+    bool r2IsPatrolling = false;
+
     bool isDrawingMode = false;
 
     void drawMap();
