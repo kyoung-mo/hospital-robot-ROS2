@@ -12,7 +12,7 @@ HospitalTaskManager::HospitalTaskManager() : Node("hospital_task_manager") {
         std::bind(&HospitalTaskManager::suspected_callback, this, std::placeholders::_1));
 
     // [v6.2] /hospital/call → 방번호별 분리
-    normal_call_sub_ = this->create_subscription<std_msgs::msg::String>(
+    normal_call_sub_room1_ = this->create_subscription<std_msgs::msg::String>(
         "/hospital/call/101", 10,
         std::bind(&HospitalTaskManager::normal_call_callback, this, std::placeholders::_1));
     normal_call_sub_room2_ = this->create_subscription<std_msgs::msg::String>(
