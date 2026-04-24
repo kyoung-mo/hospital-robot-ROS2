@@ -51,7 +51,8 @@ HospitalTaskManager::HospitalTaskManager() : Node("hospital_task_manager") {
     //r2_nav_client_ = rclcpp_action::create_client<NavigateToPose>(this, "/navigate_to_pose");
     patrol_timer_ = this->create_wall_timer(std::chrono::seconds(10), std::bind(&HospitalTaskManager::patrol_scheduler, this));
 
-    room_map_["START"] = {0.01, 0.01, 1.0};
+    room_map_["START"] = {0.01, 0.01, 1.0}; // 삭제 예정
+    room_map_["phar"] = {0.01, 0.01, 1.0};
     room_map_["101"]   = {1.686, -0.663, 1.0};
     room_map_["102"]   = {2.450, -0.546, 1.0};
     room_map_["S1"]    = {4.437, -0.969, 1.0};
@@ -113,6 +114,8 @@ void HospitalTaskManager::emergency_callback(const std_msgs::msg::String::Shared
     auto msg_led = std_msgs::msg::String();
     msg_led.data = "EMERGENCY_ON";
     emergency_event->publish(msg_led); // LED 긴급 상태(빨간색) [cite: 111, 212]
+
+    //openCR 내장 부저를 울리게하는 로직도 추가해야됨.
 }
 
 // 낙상 의심(D435) 처리
