@@ -14,7 +14,7 @@
 ![OpenCV](https://img.shields.io/badge/OpenCV-5C3EE8?style=flat-square&logo=opencv&logoColor=white)
 ![Qt](https://img.shields.io/badge/Qt6-41CD52?style=flat-square&logo=qt&logoColor=white)
 ![YOLO](https://img.shields.io/badge/YOLO11n--pose-pretrained-orange?style=flat-square)
-![Whisper](https://img.shields.io/badge/Whisper-tiny-lightgrey?style=flat-square)
+![Whisper](https://img.shields.io/badge/Whisper-small-lightgrey?style=flat-square)
 
 ---
 
