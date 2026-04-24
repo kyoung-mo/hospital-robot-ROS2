@@ -21,6 +21,7 @@
 struct RobotStatus {
     bool is_busy = false;
     std::string current_task = "IDLE";
+    std::string target_room = "";
     float battery_level = 0.0f;
 };
 
@@ -38,14 +39,19 @@ private:
     void send_nav_goal(std::string robot_id, std::string room_id, bool is_emergency);
     void patrol_scheduler(); // 배터리 기반 순찰 로봇 선정 로직
 
+    // 신규 추가된 로직 함수 선언 (빌드 에러 해결)
+    void check_arrival(std::string robot_id, geometry_msgs::msg::Pose current_pose);
+    void process_arrival_logic(std::string robot_id, std::string room_id);
+    
+    //상태 관리 변수
     std::string current_r1_location = "IDLE"; // 터틀봇1의 현재 위치 방 ID
+    std::string current_r2_location = "IDLE"; // 터틀봇2의 현재 위치 방 ID
     bool robot1_is_interacting = false;       // 터틀봇1이 병실에서 STT/TTS 중인지 여부 [cite: 170]
     std::string last_emergency_room = "";     // 비전 팀의 중복 신호 필터링용 변수
-
     std::string current_task_type = "IDLE";      // "MEDICINE", "TRASH", "EMERGENCY" 등
     std::string next_goal_after_arrival = "";    // 다음 목적지 예약
-
     std::chrono::steady_clock::time_point start_arrival_time;
+    std::chrono::steady_clock::time_point last_patrol_time; // 빌드 에러 해결을 위해 추가
 
     // 콜백 함수 
     void emergency_callback(const std_msgs::msg::String::SharedPtr msg); // 낙상 확정/긴급 버튼 [cite: 111, 113]
@@ -69,7 +75,8 @@ private:
     rclcpp::Publisher<std_msgs::msg::String>::SharedPtr tts_trigger; // 도착 후 TTS 실행 [cite: 141]
     rclcpp::Publisher<std_msgs::msg::String>::SharedPtr emergency_event; // micro-ROS LED 제어 [cite: 140]
     
-    rclcpp_action::Client<NavigateToPose>::SharedPtr r1_nav_client_, r2_nav_client_;
+    //rclcpp_action::Client<NavigateToPose>::SharedPtr r1_nav_client_, r2_nav_client_; //->Action 기반
+    rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr r1_goal_pub_, r2_goal_pub_; //->Topic 기반
     
     // 데이터 관리
     std::map<std::string, std::vector<double>> room_map_;
