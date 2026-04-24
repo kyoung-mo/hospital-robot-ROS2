@@ -13,10 +13,10 @@ HospitalTaskManager::HospitalTaskManager() : Node("hospital_task_manager") {
 
     // [v6.2] /hospital/call → 방번호별 분리
     normal_call_sub_room1_ = this->create_subscription<std_msgs::msg::String>(
-        "/hospital/call/101", 10,
+        "/hospital/call/room1", 10,
         std::bind(&HospitalTaskManager::normal_call_callback, this, std::placeholders::_1));
     normal_call_sub_room2_ = this->create_subscription<std_msgs::msg::String>(
-        "/hospital/call/102", 10,
+        "/hospital/call/room2", 10,
         std::bind(&HospitalTaskManager::normal_call_callback, this, std::placeholders::_1));
 
     medicine_sub_ = this->create_subscription<std_msgs::msg::String>(
@@ -81,8 +81,8 @@ HospitalTaskManager::HospitalTaskManager() : Node("hospital_task_manager") {
     tts_trigger = this->create_publisher<std_msgs::msg::String>("/hospital/tts_trigger", 10);
 
     // [v6.2] emergency_event → 방번호별 분리
-    emergency_event_room1_ = this->create_publisher<std_msgs::msg::String>("/hospital/emergency_event/101", 10);
-    emergency_event_room2_ = this->create_publisher<std_msgs::msg::String>("/hospital/emergency_event/102", 10);
+    emergency_event_room1_ = this->create_publisher<std_msgs::msg::String>("/hospital/emergency_event/room1", 10);
+    emergency_event_room2_ = this->create_publisher<std_msgs::msg::String>("/hospital/emergency_event/room2", 10);
 
     r1_goal_pub_ = this->create_publisher<geometry_msgs::msg::PoseStamped>("/goal_pose", 10);
     r2_goal_pub_ = this->create_publisher<geometry_msgs::msg::PoseStamped>("/robot2/goal_pose", 10);
