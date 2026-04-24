@@ -13,6 +13,7 @@
 #include "sensor_msgs/msg/battery_state.hpp"
 #include "geometry_msgs/msg/pose_with_covariance_stamped.hpp"
 #include "geometry_msgs/msg/pose_stamped.hpp"
+
 #include "nav2_msgs/action/navigate_to_pose.hpp"
 #include "rclcpp_action/rclcpp_action.hpp"
 
@@ -21,6 +22,8 @@ struct RobotStatus {
     bool is_busy = false;
     std::string current_task = "IDLE";
     float battery_level = 0.0f;
+
+    std::string target_room = ""; //현재 이동 중인 방 이름 추가 (도메인 브릿지)
 };
 
 class HospitalTaskManager : public rclcpp::Node {

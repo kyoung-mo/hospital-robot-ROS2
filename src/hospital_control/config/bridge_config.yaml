@@ -1,0 +1,17 @@
+name: turtlebot_test_bridge
+from_domain: 7
+to_domain: 5
+
+topics:
+  amcl_pose:
+    type: geometry_msgs/msg/PoseWithCovarianceStamped
+    remap: /robot1/amcl_pose
+
+  battery_state:
+    type: sensor_msgs/msg/BatteryState
+    remap: /robot1/battery_state
+
+  robot1/navigate_to_pose:
+    type: nav2_msgs/action/NavigateToPose
+    remap: navigate_to_pose
+    
