@@ -63,6 +63,8 @@ private:
     std::vector<std::string> patrol_route_;
     int patrol_index_ = 0;
     std::string patrol_robot_id_ = "";
+    bool patrol_turn_ = false;
+    std::map<std::string, std::map<std::string, std::vector<double>>> robot_route_maps_;
 
     // 긴급 상황
     bool buzzer_active_ = false;
