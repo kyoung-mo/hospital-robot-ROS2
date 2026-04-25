@@ -88,11 +88,11 @@ HospitalTaskManager::HospitalTaskManager() : Node("hospital_task_manager") {
 
 // 4. room_map 좌표 (map 프레임 절대좌표)
     room_map_["phar"]         = {0.01,   0.01,  1.0};
-    room_map_["CORRIDOR_L"]   = {0.0,    0.0,   1.0};   // TODO: 왼쪽 복도 좌표 확정 필요
+    room_map_["CORRIDOR_L"]   = {0.0,    0.0,   1.0}; 
     room_map_["101"]          = {1.686, -0.663, 1.0};
     room_map_["CORRIDOR_MID"] = {2.030,  0.528, 1.0};
     room_map_["102"]          = {2.450, -0.546, 1.0};
-    room_map_["waste_front"]  = {4.928, -0.448, 1.0};   // [v6.3] 쓰레기장 앞 복도
+    room_map_["waste_front"]  = {4.649, -0.513, 1.0};   // [v6.3] 쓰레기장 앞 복도
     room_map_["waste"]        = {5.379,  1.027, 1.0};
     room_map_["S1"]           = {4.437, -0.969, 1.0};
     room_map_["S2"]           = {5.134, -0.996, 1.0};
