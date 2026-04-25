@@ -112,6 +112,12 @@ private:
     rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr r1_cmd_vel_pub_;
     // TODO: r2_cmd_vel_pub_ → bridge_config.yaml에 /cmd_vel 항목 추가 필요
 
+    rclcpp::Publisher<std_msgs::msg::String>::SharedPtr tts_trigger; // 도착 후 TTS 실행 [cite: 141]
+    rclcpp::Publisher<std_msgs::msg::String>::SharedPtr emergency_event; // micro-ROS LED 제어 [cite: 140]
+    
+    rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr r1_goal_pub_, r2_goal_pub_; //->Topic 기반
+    rclcpp::Publisher<std_msgs::msg::String>::SharedPtr r1_task_pub_, r2_task_pub_;
+    
     // 데이터 관리
     std::map<std::string, std::vector<double>> room_map_;
     std::map<std::string, RobotStatus> fleet_status_;
