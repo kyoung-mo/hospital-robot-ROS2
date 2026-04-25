@@ -86,18 +86,24 @@ HospitalTaskManager::HospitalTaskManager() : Node("hospital_task_manager") {
         std::chrono::seconds(10),
         std::bind(&HospitalTaskManager::patrol_scheduler, this));
 
-// 4. room_map 좌표 (map 프레임 절대좌표)
-    room_map_["phar"]         = {0.01,   0.01,  1.0};
-    room_map_["CORRIDOR_L"]   = {0.0,    0.0,   1.0};   // TODO: 왼쪽 복도 좌표 확정 필요
-    room_map_["101"]          = {1.686, -0.663, 1.0};
-    room_map_["CORRIDOR_MID"] = {2.030,  0.528, 1.0};
-    room_map_["102"]          = {2.450, -0.546, 1.0};
-    room_map_["waste_front"]  = {4.928, -0.448, 1.0};   // [v6.3] 쓰레기장 앞 복도
-    room_map_["waste"]        = {5.379,  1.027, 1.0};
-    room_map_["S1"]           = {4.437, -0.969, 1.0};
-    room_map_["S2"]           = {5.134, -0.996, 1.0};
+// 4. room_map 좌표 - 공유 목적지 (map 프레임 절대좌표)
+    room_map_["phar"]  = {0.01,   0.01,  1.0};   // 간호사 스테이션
+    room_map_["101"]   = {1.686, -0.663, 1.0};   // 방1
+    room_map_["102"]   = {2.450, -0.546, 1.0};   // 방2
+    room_map_["waste"] = {5.379,  1.027, 1.0};   // 쓰레기장
+    room_map_["S1"]    = {4.437, -0.969, 1.0};   // Robot1 스테이션
+    room_map_["S2"]    = {5.134, -0.996, 1.0};   // Robot2 스테이션
 
-// 5. 순찰 경로 (waste_front 추가)
+    // [v6.5] 로봇별 경유지 좌표 (경로 충돌 방지 - y값 분리)
+    robot_route_maps_["robot_1"]["CORRIDOR_L"]   = {-0.239,  0.013, 1.0};
+    robot_route_maps_["robot_1"]["CORRIDOR_MID"] = { 1.737,  0.636, 1.0};
+    robot_route_maps_["robot_1"]["waste_front"]  = { 4.827, -0.662, 1.0};
+
+    robot_route_maps_["robot_2"]["CORRIDOR_L"]   = {-0.208, -0.471, 1.0};
+    robot_route_maps_["robot_2"]["CORRIDOR_MID"] = { 2.314,  0.321, 1.0};
+    robot_route_maps_["robot_2"]["waste_front"]  = { 3.745, -0.580, 1.0};
+
+// 5. 순찰 경로 (공통 - 경유지 좌표는 로봇별 map에서 참조)
     patrol_route_ = {"CORRIDOR_L", "101", "CORRIDOR_MID", "102", "CORRIDOR_MID", "waste_front", "waste"};
 
 // 6. 초기화
@@ -107,7 +113,7 @@ HospitalTaskManager::HospitalTaskManager() : Node("hospital_task_manager") {
     fleet_status_["robot_2"] = {false, "IDLE", "", 0.0f};
 
     last_patrol_time = std::chrono::steady_clock::now();
-    RCLCPP_INFO(this->get_logger(), "Hospital Task Manager v6.4 Started.");
+    RCLCPP_INFO(this->get_logger(), "Hospital Task Manager v6.5 Started.");
 }
 
 //-------------------------함수_정의-------------------------------//
@@ -117,15 +123,19 @@ bool HospitalTaskManager::is_high_priority_active() {
     return current_task_type == "EMERGENCY_WAIT" || current_task_type == "FALL_CHECK";
 }
 
-// 방 번호에 따라 emergency_event 발행
+// [v6.5] 방 번호에 따라 emergency_event 발행 - 101/102만 발행, 복도는 무시
 void HospitalTaskManager::publish_emergency_event(const std::string& room_id, const std::string& event_type) {
     auto msg = std_msgs::msg::String();
     msg.data = event_type;
-    if (room_id == "101") emergency_event_room1_->publish(msg);
-    else if (room_id == "102") emergency_event_room2_->publish(msg);
-    else {
+    if (room_id == "101") {
         emergency_event_room1_->publish(msg);
+        RCLCPP_INFO(this->get_logger(), "💡 emergency_event/room1 → %s", event_type.c_str());
+    } else if (room_id == "102") {
         emergency_event_room2_->publish(msg);
+        RCLCPP_INFO(this->get_logger(), "💡 emergency_event/room2 → %s", event_type.c_str());
+    } else {
+        // 복도/경유지에서 발생한 이벤트는 LED/부저 발행 안 함
+        RCLCPP_WARN(this->get_logger(), "⚠️ emergency_event 무시 (복도/경유지): %s", room_id.c_str());
     }
 }
 
@@ -138,9 +148,19 @@ double HospitalTaskManager::calculate_distance(geometry_msgs::msg::Pose robot_po
 // 도착 체크 (35cm 이내 → 도착 판정)
 void HospitalTaskManager::check_arrival(std::string robot_id, geometry_msgs::msg::Pose current_pose) {
     std::string target = fleet_status_[robot_id].target_room;
-    if (target.empty() || room_map_.find(target) == room_map_.end()) return;
+    if (target.empty()) return;
 
-    double dist = calculate_distance(current_pose, room_map_[target]);
+    // [v6.5] 로봇별 경유지 먼저 확인, 없으면 공유 map
+    std::vector<double> coords;
+    if (robot_route_maps_.count(robot_id) && robot_route_maps_[robot_id].count(target)) {
+        coords = robot_route_maps_[robot_id][target];
+    } else if (room_map_.count(target)) {
+        coords = room_map_[target];
+    } else {
+        return;
+    }
+
+    double dist = calculate_distance(current_pose, coords);
     if (dist < 0.35) {
         RCLCPP_INFO(this->get_logger(), "📍 %s reached %s.", robot_id.c_str(), target.c_str());
         fleet_status_[robot_id].is_busy = false;
@@ -149,32 +169,56 @@ void HospitalTaskManager::check_arrival(std::string robot_id, geometry_msgs::msg
     }
 }
 
-// 최적 로봇 선정
+// [v6.5] 최적 로봇 선정 - 배터리 30% 미만 제외, 놀고있는 로봇 우선
 std::string HospitalTaskManager::select_best_robot(std::string room_id, bool is_emergency) {
-    if (room_map_.find(room_id) == room_map_.end()) {
+    // 좌표 조회
+    std::vector<double> coords;
+    if (room_map_.count(room_id)) coords = room_map_[room_id];
+    else {
         RCLCPP_ERROR(this->get_logger(), "select_best_robot: Unknown room_id: %s", room_id.c_str());
         return "robot_1";
     }
-    double d1 = calculate_distance(r1_pose_, room_map_[room_id]);
-    double d2 = calculate_distance(r2_pose_, room_map_[room_id]);
+
+    double d1 = calculate_distance(r1_pose_, coords);
+    double d2 = calculate_distance(r2_pose_, coords);
+    float bat1 = fleet_status_["robot_1"].battery_level;
+    float bat2 = fleet_status_["robot_2"].battery_level;
+
+    // 긴급: 거리 가까운 쪽 (배터리 무관)
     if (is_emergency) return (d1 <= d2) ? "robot_1" : "robot_2";
-    if (!fleet_status_["robot_1"].is_busy && fleet_status_["robot_2"].is_busy) return "robot_1";
-    if (fleet_status_["robot_1"].is_busy && !fleet_status_["robot_2"].is_busy) return "robot_2";
+
+    // [v6.5] 일반: 배터리 30% 이상 + 놀고있는 로봇 우선
+    bool r1_ok = !fleet_status_["robot_1"].is_busy && bat1 >= 30.0f;
+    bool r2_ok = !fleet_status_["robot_2"].is_busy && bat2 >= 30.0f;
+
+    if (r1_ok && !r2_ok) return "robot_1";
+    if (!r1_ok && r2_ok) return "robot_2";
+    if (r1_ok && r2_ok)  return (d1 <= d2) ? "robot_1" : "robot_2";
+
+    // 둘 다 조건 미충족 → 거리 기준
     return (d1 <= d2) ? "robot_1" : "robot_2";
 }
 
 // 이동 명령 (Topic 방식)
 void HospitalTaskManager::send_nav_goal(std::string robot_id, std::string room_id, bool is_emergency) {
     (void)is_emergency;
-    if (room_map_.find(room_id) == room_map_.end()) {
+
+    // [v6.5] 로봇별 경유지 먼저 확인, 없으면 공유 map 사용
+    std::vector<double> coords;
+    if (robot_route_maps_.count(robot_id) && robot_route_maps_[robot_id].count(room_id)) {
+        coords = robot_route_maps_[robot_id][room_id];
+    } else if (room_map_.count(room_id)) {
+        coords = room_map_[room_id];
+    } else {
         RCLCPP_ERROR(this->get_logger(), "Unknown room_id: %s", room_id.c_str());
         return;
     }
+
     auto goal_msg = geometry_msgs::msg::PoseStamped();
     goal_msg.header.frame_id = "map";
     goal_msg.header.stamp = this->now();
-    goal_msg.pose.position.x = room_map_[room_id][0];
-    goal_msg.pose.position.y = room_map_[room_id][1];
+    goal_msg.pose.position.x = coords[0];
+    goal_msg.pose.position.y = coords[1];
 
     // [v6.4] 방별 도착 방향 설정 (벽면을 바라보도록)
     // orientation: quaternion (x, y, z, w) - yaw 기준
@@ -261,7 +305,7 @@ void HospitalTaskManager::start_scan_rotation(std::string robot_id) {
 
     // [v6.4] 회전 속도 낮춤 (0.3 → 0.15) - 카메라 인식률 향상
     auto twist = geometry_msgs::msg::Twist();
-    twist.angular.z = 0.07;
+    twist.angular.z = 0.15;
     if (robot_id == "robot_1") r1_cmd_vel_pub_->publish(twist);
     // TODO: robot2 cmd_vel bridge 필요
 
@@ -437,16 +481,31 @@ void HospitalTaskManager::waste_full_callback(const std_msgs::msg::String::Share
     }
 }
 
-// 순찰 스케줄러 (10초 타이머)
+// [v6.5] 순찰 스케줄러 - 번갈아가며 + 배터리 30% 미만 제외
 void HospitalTaskManager::patrol_scheduler() {
     auto now = std::chrono::steady_clock::now();
     if (now - last_patrol_time < std::chrono::seconds(10)) return;
     if (fleet_status_["robot_1"].is_busy || fleet_status_["robot_2"].is_busy) return;
-    // [v6.4] 낙상 탐색/긴급 중이면 순찰 나가지 않음
     if (is_high_priority_active()) return;
 
-    std::string patrol_robot = (fleet_status_["robot_1"].battery_level >= fleet_status_["robot_2"].battery_level)
-                                ? "robot_1" : "robot_2";
+    float bat1 = fleet_status_["robot_1"].battery_level;
+    float bat2 = fleet_status_["robot_2"].battery_level;
+
+    // 둘 다 배터리 30% 미만이면 순찰 안 함
+    if (bat1 < 30.0f && bat2 < 30.0f) {
+        RCLCPP_WARN(this->get_logger(), "⚠️ 두 로봇 모두 배터리 부족 (%.1f%%, %.1f%%). 순찰 대기.", bat1, bat2);
+        return;
+    }
+
+    // 번갈아가며 순찰 (배터리 30% 미만이면 건너뜀)
+    std::string patrol_robot;
+    if (!patrol_turn_) {
+        patrol_robot = (bat1 >= 30.0f) ? "robot_1" : "robot_2";
+    } else {
+        patrol_robot = (bat2 >= 30.0f) ? "robot_2" : "robot_1";
+    }
+    patrol_turn_ = !patrol_turn_;
+
     RCLCPP_INFO(this->get_logger(), "🔄 Patrol start: %s (Battery: %.1f%%)",
                 patrol_robot.c_str(), fleet_status_[patrol_robot].battery_level);
 
