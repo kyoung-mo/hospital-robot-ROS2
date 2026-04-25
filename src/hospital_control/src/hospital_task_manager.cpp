@@ -11,7 +11,6 @@ HospitalTaskManager::HospitalTaskManager() : Node("hospital_task_manager") {
         "/hospital/fall_suspected", 10,
         std::bind(&HospitalTaskManager::suspected_callback, this, std::placeholders::_1));
 
-    // [v6.2] /hospital/call → 방번호별 분리
     normal_call_sub_room1_ = this->create_subscription<std_msgs::msg::String>(
         "/hospital/call/room1", 10,
         std::bind(&HospitalTaskManager::normal_call_callback, this, std::placeholders::_1));
@@ -27,12 +26,10 @@ HospitalTaskManager::HospitalTaskManager() : Node("hospital_task_manager") {
         "/hospital/trash_request", 10,
         std::bind(&HospitalTaskManager::trash_takeout_callback, this, std::placeholders::_1));
 
-    // [v6.1] waste_full_sub_ 연결 추가
     waste_full_sub_ = this->create_subscription<std_msgs::msg::String>(
         "/hospital/facility_status", 10,
         std::bind(&HospitalTaskManager::waste_full_callback, this, std::placeholders::_1));
 
-    // 터틀봇 위치 구독
     r1_pose_sub_ = this->create_subscription<geometry_msgs::msg::PoseWithCovarianceStamped>(
         "/amcl_pose", 10,
         [this](const geometry_msgs::msg::PoseWithCovarianceStamped::SharedPtr msg) {
@@ -46,7 +43,6 @@ HospitalTaskManager::HospitalTaskManager() : Node("hospital_task_manager") {
             if (fleet_status_["robot_2"].is_busy) check_arrival("robot_2", r2_pose_);
         });
 
-    // 배터리 상태 구독
     r1_battery_sub_ = this->create_subscription<sensor_msgs::msg::BatteryState>(
         "/battery_state", 10,
         [this](const sensor_msgs::msg::BatteryState::SharedPtr msg) {
@@ -58,38 +54,32 @@ HospitalTaskManager::HospitalTaskManager() : Node("hospital_task_manager") {
             fleet_status_["robot_2"].battery_level = msg->percentage;
         });
 
-    // [v6.1] 내장 버튼 구독 - 낙상 감지 후 의료진이 버튼 눌러 부저 해제
     r1_sensor_state_sub_ = this->create_subscription<turtlebot3_msgs::msg::SensorState>(
         "/sensor_state", 10,
         [this](const turtlebot3_msgs::msg::SensorState::SharedPtr msg) {
             if (!buzzer_active_) return;
-            // BUTTON0 또는 BUTTON1 눌리면 부저 해제 후 스테이션 복귀
             if (msg->button == turtlebot3_msgs::msg::SensorState::BUTTON0 ||
                 msg->button == turtlebot3_msgs::msg::SensorState::BUTTON1) {
                 RCLCPP_INFO(this->get_logger(), "🔔 버튼 눌림 감지. 부저 해제 → 스테이션 복귀.");
                 buzzer_active_ = false;
-                // TODO: 부저 끄기 (/sound 미지원 확인됨, 대안 구현 필요)
                 current_task_type = "IDLE";
                 std::string station = (emergency_robot_id_ == "robot_1") ? "S1" : "S2";
-                send_nav_goal(emergency_robot_id_, station, false);
+                go_to_with_routing(emergency_robot_id_, station);
                 emergency_robot_id_ = "";
             }
         });
-    // TODO: robot2 sensor_state 구독 → bridge_config.yaml에 /sensor_state 항목 추가 필요
 
 // 2. 퍼블리셔 설정
     tts_trigger = this->create_publisher<std_msgs::msg::String>("/hospital/tts_trigger", 10);
-
-    // [v6.2] emergency_event → 방번호별 분리
     emergency_event_room1_ = this->create_publisher<std_msgs::msg::String>("/hospital/emergency_event/room1", 10);
     emergency_event_room2_ = this->create_publisher<std_msgs::msg::String>("/hospital/emergency_event/room2", 10);
-
     r1_goal_pub_ = this->create_publisher<geometry_msgs::msg::PoseStamped>("/goal_pose", 10);
     r2_goal_pub_ = this->create_publisher<geometry_msgs::msg::PoseStamped>("/robot2/goal_pose", 10);
-
-    // yolo_node / Qt GUI에 현재 임무 위치 전달
     r1_task_pub_ = this->create_publisher<std_msgs::msg::String>("/task_assignment", 10);
     r2_task_pub_ = this->create_publisher<std_msgs::msg::String>("/robot2/task_assignment", 10);
+    // [v6.3] 낙상 탐색 회전용 cmd_vel
+    r1_cmd_vel_pub_ = this->create_publisher<geometry_msgs::msg::Twist>("/cmd_vel", 10);
+    // TODO: robot2 cmd_vel → bridge_config.yaml에 /cmd_vel 항목 추가 필요
 
 // 3. 타이머
     patrol_timer_ = this->create_wall_timer(
@@ -97,27 +87,35 @@ HospitalTaskManager::HospitalTaskManager() : Node("hospital_task_manager") {
         std::bind(&HospitalTaskManager::patrol_scheduler, this));
 
 // 4. room_map 좌표 (map 프레임 절대좌표)
-    room_map_["phar"]         = {0.01,   0.01,  1.0};   // 약국/간호사 스테이션 (약 수령 위치)
+    room_map_["phar"]         = {0.01,   0.01,  1.0};
     room_map_["CORRIDOR_L"]   = {0.0,    0.0,   1.0};   // TODO: 왼쪽 복도 좌표 확정 필요
     room_map_["101"]          = {1.686, -0.663, 1.0};
-    room_map_["CORRIDOR_MID"] = {2.030,  0.528, 1.0};   // 확정 (publish_point 실측)
+    room_map_["CORRIDOR_MID"] = {2.030,  0.528, 1.0};
     room_map_["102"]          = {2.450, -0.546, 1.0};
+    room_map_["waste_front"]  = {4.928, -0.448, 1.0};   // [v6.3] 쓰레기장 앞 복도
     room_map_["waste"]        = {5.379,  1.027, 1.0};
     room_map_["S1"]           = {4.437, -0.969, 1.0};
     room_map_["S2"]           = {5.134, -0.996, 1.0};
 
-// 5. 순찰 경로 설정
-    patrol_route_ = {"CORRIDOR_L", "101", "CORRIDOR_MID", "102", "CORRIDOR_MID", "waste"};
+// 5. 순찰 경로 (waste_front 추가)
+    patrol_route_ = {"CORRIDOR_L", "101", "CORRIDOR_MID", "102", "CORRIDOR_MID", "waste_front", "waste"};
 
-// 6. 로봇 상태 초기화
+// 6. 초기화
+    waypoint_queues_["robot_1"] = std::deque<std::string>();
+    waypoint_queues_["robot_2"] = std::deque<std::string>();
     fleet_status_["robot_1"] = {false, "IDLE", "", 0.0f};
     fleet_status_["robot_2"] = {false, "IDLE", "", 0.0f};
 
     last_patrol_time = std::chrono::steady_clock::now();
-    RCLCPP_INFO(this->get_logger(), "Hospital Task Manager v6.2 Started.");
+    RCLCPP_INFO(this->get_logger(), "Hospital Task Manager v6.3 Started.");
 }
 
 //-------------------------함수_정의-------------------------------//
+
+// 우선순위 높은 태스크 중인지 확인
+bool HospitalTaskManager::is_high_priority_active() {
+    return current_task_type == "EMERGENCY_WAIT" || current_task_type == "FALL_CHECK";
+}
 
 // 방 번호에 따라 emergency_event 발행
 void HospitalTaskManager::publish_emergency_event(const std::string& room_id, const std::string& event_type) {
@@ -126,7 +124,6 @@ void HospitalTaskManager::publish_emergency_event(const std::string& room_id, co
     if (room_id == "101") emergency_event_room1_->publish(msg);
     else if (room_id == "102") emergency_event_room2_->publish(msg);
     else {
-        // 방 번호 불명확 시 양쪽 모두 발행
         emergency_event_room1_->publish(msg);
         emergency_event_room2_->publish(msg);
     }
@@ -154,7 +151,6 @@ void HospitalTaskManager::check_arrival(std::string robot_id, geometry_msgs::msg
 
 // 최적 로봇 선정
 std::string HospitalTaskManager::select_best_robot(std::string room_id, bool is_emergency) {
-    // 방어 코드: room_map에 없는 키 접근 방지 (segfault 예방)
     if (room_map_.find(room_id) == room_map_.end()) {
         RCLCPP_ERROR(this->get_logger(), "select_best_robot: Unknown room_id: %s", room_id.c_str());
         return "robot_1";
@@ -167,7 +163,7 @@ std::string HospitalTaskManager::select_best_robot(std::string room_id, bool is_
     return (d1 <= d2) ? "robot_1" : "robot_2";
 }
 
-// 이동 명령 (Topic 방식 - Action 미지원)
+// 이동 명령 (Topic 방식)
 void HospitalTaskManager::send_nav_goal(std::string robot_id, std::string room_id, bool is_emergency) {
     (void)is_emergency;
     if (room_map_.find(room_id) == room_map_.end()) {
@@ -184,7 +180,6 @@ void HospitalTaskManager::send_nav_goal(std::string robot_id, std::string room_i
     if (robot_id == "robot_1") r1_goal_pub_->publish(goal_msg);
     else                        r2_goal_pub_->publish(goal_msg);
 
-    // yolo_node / Qt GUI에 현재 목적지 전달
     auto task_msg = std_msgs::msg::String();
     task_msg.data = room_id;
     if (robot_id == "robot_1") r1_task_pub_->publish(task_msg);
@@ -195,20 +190,116 @@ void HospitalTaskManager::send_nav_goal(std::string robot_id, std::string room_i
     RCLCPP_INFO(this->get_logger(), "🚀 %s → %s", robot_id.c_str(), room_id.c_str());
 }
 
+// [v6.3] 웨이포인트 시퀀스 발행
+void HospitalTaskManager::send_nav_sequence(std::string robot_id, std::vector<std::string> waypoints, bool is_emergency) {
+    if (waypoints.empty()) return;
+
+    // 기존 큐 초기화
+    waypoint_queues_[robot_id].clear();
+
+    // 첫 번째 이후 웨이포인트 큐에 추가
+    for (size_t i = 1; i < waypoints.size(); i++) {
+        waypoint_queues_[robot_id].push_back(waypoints[i]);
+    }
+
+    // 첫 번째 목적지로 출발
+    send_nav_goal(robot_id, waypoints[0], is_emergency);
+}
+
+// [v6.3] 현재 위치 기반 경유지 자동 적용 이동
+void HospitalTaskManager::go_to_with_routing(std::string robot_id, std::string destination) {
+    std::string current = (robot_id == "robot_1") ? current_r1_location : current_r2_location;
+    std::vector<std::string> route;
+
+    // 출발지 이탈 경유지
+    if (current == "101" || current == "102") {
+        route.push_back("CORRIDOR_MID");
+    } else if (current == "waste") {
+        route.push_back("waste_front");
+    }
+
+    // 목적지 진입 경유지 (중복 방지)
+    if (destination == "101" || destination == "102") {
+        if (route.empty() || route.back() != "CORRIDOR_MID") {
+            route.push_back("CORRIDOR_MID");
+        }
+    } else if (destination == "waste") {
+        if (route.empty() || route.back() != "waste_front") {
+            route.push_back("waste_front");
+        }
+    }
+
+    route.push_back(destination);
+
+    if (route.size() == 1) {
+        send_nav_goal(robot_id, destination, false);
+    } else {
+        RCLCPP_INFO(this->get_logger(), "🗺️ [%s] 경유 경로: %zu 웨이포인트", robot_id.c_str(), route.size());
+        send_nav_sequence(robot_id, route, false);
+    }
+}
+
+// [v6.3] 낙상 탐색 회전 시작 (20초)
+void HospitalTaskManager::start_scan_rotation(std::string robot_id) {
+    scanning_robot_id_ = robot_id;
+    current_task_type = "FALL_CHECK";
+    RCLCPP_INFO(this->get_logger(), "🔄 [%s] 낙상 탐색 회전 시작 (20초)", robot_id.c_str());
+
+    // 회전 명령 발행
+    auto twist = geometry_msgs::msg::Twist();
+    twist.angular.z = 0.3;
+    if (robot_id == "robot_1") r1_cmd_vel_pub_->publish(twist);
+    // TODO: robot2 cmd_vel bridge 필요
+
+    // 20초 후 정지 타이머
+    scan_timer_ = this->create_wall_timer(
+        std::chrono::seconds(20),
+        [this]() { stop_scan_rotation(); });
+}
+
+// [v6.3] 탐색 회전 정지
+void HospitalTaskManager::stop_scan_rotation() {
+    if (scan_timer_) {
+        scan_timer_->cancel();
+        scan_timer_ = nullptr;
+    }
+
+    // 정지 명령
+    auto twist = geometry_msgs::msg::Twist();
+    twist.angular.z = 0.0;
+    if (scanning_robot_id_ == "robot_1") r1_cmd_vel_pub_->publish(twist);
+
+    RCLCPP_INFO(this->get_logger(), "⏹️ [%s] 낙상 탐색 완료. 오탐지 처리 → 스테이션 복귀.", scanning_robot_id_.c_str());
+    current_task_type = "IDLE";
+    std::string station = (scanning_robot_id_ == "robot_1") ? "S1" : "S2";
+    go_to_with_routing(scanning_robot_id_, station);
+    scanning_robot_id_ = "";
+}
+
 //-------------------------콜백_함수-------------------------------//
 
-// [v6.1] 낙상 감지: 파견 대신 그 자리 정지 + 부저
+// 낙상 확정: 그 자리 정지 + 부저
 void HospitalTaskManager::emergency_callback(const std_msgs::msg::String::SharedPtr msg) {
-    // 중복 필터: 이미 부저 울리는 중이면 무시
     if (buzzer_active_) return;
     if (last_emergency_room == msg->data && fleet_status_["robot_1"].is_busy) return;
 
     last_emergency_room = msg->data;
     RCLCPP_ERROR(this->get_logger(), "🚨 EMERGENCY: %s", msg->data.c_str());
 
-    // 가장 가까운 로봇을 그 자리에서 정지 (현재 위치로 goal 재발행)
+    // [v6.3] 탐색 회전 중이면 즉시 정지
+    if (scan_timer_) {
+        scan_timer_->cancel();
+        scan_timer_ = nullptr;
+        auto twist = geometry_msgs::msg::Twist();
+        if (scanning_robot_id_ == "robot_1") r1_cmd_vel_pub_->publish(twist);
+        scanning_robot_id_ = "";
+    }
+    // 큐 초기화
+    next_goal_after_arrival = "";
+
     std::string target_robot = select_best_robot(msg->data, true);
     emergency_robot_id_ = target_robot;
+    waypoint_queues_[target_robot].clear();
 
     auto stop_msg = geometry_msgs::msg::PoseStamped();
     stop_msg.header.frame_id = "map";
@@ -224,31 +315,42 @@ void HospitalTaskManager::emergency_callback(const std_msgs::msg::String::Shared
     current_task_type = "EMERGENCY_WAIT";
     buzzer_active_ = true;
 
-    // TODO: 내장 OpenCR 부저 울리기 (/sound 토픽 미지원, 대안 구현 필요)
     RCLCPP_WARN(this->get_logger(), "⚠️ TODO: Activate buzzer on %s", target_robot.c_str());
-
-    // 방 입구 LED 긴급 상태
     publish_emergency_event(msg->data, "emergency");
 }
 
-// 낙상 의심 (D435) → 가까운 로봇 파견
+// [v6.3] 낙상 의심: 우선순위 수정 - 두 로봇 다 바빠도 강제 파견
 void HospitalTaskManager::suspected_callback(const std_msgs::msg::String::SharedPtr msg) {
-    // 중복 필터: 두 로봇 모두 바쁘면 무시
-    if (fleet_status_["robot_1"].is_busy && fleet_status_["robot_2"].is_busy) {
-        RCLCPP_WARN(this->get_logger(), "⚠️ All robots busy, ignoring fall suspected.");
+    // 이미 긴급 상황 중이면 무시
+    if (buzzer_active_) return;
+    if (is_high_priority_active()) {
+        RCLCPP_WARN(this->get_logger(), "⚠️ Fall Suspected ignored (high priority active)");
         return;
     }
-    // room_map에 없는 방이면 무시
     if (room_map_.find(msg->data) == room_map_.end()) {
         RCLCPP_WARN(this->get_logger(), "⚠️ Fall Suspected: Unknown room_id: %s", msg->data.c_str());
         return;
     }
-    RCLCPP_WARN(this->get_logger(), "⚠️ Fall Suspected (D435): %s", msg->data.c_str());
-    send_nav_goal(select_best_robot(msg->data, true), msg->data, true);
+
+    // [v6.3] 두 로봇 다 바빠도 가장 가까운 로봇 강제 파견
+    std::string target_robot = select_best_robot(msg->data, true);
+    RCLCPP_WARN(this->get_logger(), "⚠️ Fall Suspected (D435): %s → %s 파견",
+                msg->data.c_str(), target_robot.c_str());
+
+    current_task_type = "FALL_CHECK";
+    next_goal_after_arrival = "";
+    waypoint_queues_[target_robot].clear();
+    go_to_with_routing(target_robot, msg->data);
 }
 
-// 버튼 호출 (room1/room2 공통 콜백)
+// [v6.3] 버튼 호출: 우선순위 체크 + 경유지 적용
 void HospitalTaskManager::normal_call_callback(const std_msgs::msg::String::SharedPtr msg) {
+    // [v6.3] 우선순위 높은 태스크 중이면 무시
+    if (is_high_priority_active()) {
+        RCLCPP_WARN(this->get_logger(), "🔔 Normal Call ignored (high priority active): %s", msg->data.c_str());
+        return;
+    }
+
     std::string requested_room = msg->data;
     RCLCPP_INFO(this->get_logger(), "🔔 Normal Call: %s", requested_room.c_str());
 
@@ -257,12 +359,19 @@ void HospitalTaskManager::normal_call_callback(const std_msgs::msg::String::Shar
         return;
     }
     std::string best_robot = select_best_robot(requested_room, false);
-    send_nav_goal(best_robot, requested_room, false);
+    current_task_type = "CALL";
+    go_to_with_routing(best_robot, requested_room);  // [v6.3] 경유지 적용
     publish_emergency_event(requested_room, "dispatching");
 }
 
-// [v6.1] 약 요청: S1 → phar (간호사 스테이션)으로 변경
+// [v6.3] 약 요청: 우선순위 체크 + 경유지 적용
 void HospitalTaskManager::medicine_callback(const std_msgs::msg::String::SharedPtr msg) {
+    // [v6.3] 우선순위 높은 태스크 중이면 무시
+    if (is_high_priority_active()) {
+        RCLCPP_WARN(this->get_logger(), "💊 Medicine Request ignored (high priority active)");
+        return;
+    }
+
     std::string target_room = msg->data;
     RCLCPP_INFO(this->get_logger(), "💊 Medicine Request: %s. Going to phar first.", target_room.c_str());
 
@@ -270,11 +379,16 @@ void HospitalTaskManager::medicine_callback(const std_msgs::msg::String::SharedP
     next_goal_after_arrival = target_room;
 
     std::string best_robot = select_best_robot("phar", false);
-    send_nav_goal(best_robot, "phar", false);
+    go_to_with_routing(best_robot, "phar");
 }
 
-// 쓰레기 수거 (음성 요청)
+// [v6.3] 쓰레기 수거 (음성): 우선순위 체크 + 경유지 적용
 void HospitalTaskManager::trash_takeout_callback(const std_msgs::msg::String::SharedPtr msg) {
+    if (is_high_priority_active()) {
+        RCLCPP_WARN(this->get_logger(), "🗑️ Trash request ignored (high priority active)");
+        return;
+    }
+
     std::string requested_room = msg->data;
     std::string target_robot = "";
 
@@ -284,14 +398,19 @@ void HospitalTaskManager::trash_takeout_callback(const std_msgs::msg::String::Sh
     if (!target_robot.empty()) {
         RCLCPP_INFO(this->get_logger(), "🗑️ Trash Takeout: %s → waste", target_robot.c_str());
         current_task_type = "TRASH_VOICE";
-        send_nav_goal(target_robot, "waste", false);
+        go_to_with_routing(target_robot, "waste");  // [v6.3] 경유지 적용
     } else {
         RCLCPP_WARN(this->get_logger(), "⚠️ No robot found in %s for trash.", requested_room.c_str());
     }
 }
 
-// 쓰레기 가득 (D435 감지)
+// [v6.3] 쓰레기 가득 (D435): 우선순위 체크 + 경유지 적용
 void HospitalTaskManager::waste_full_callback(const std_msgs::msg::String::SharedPtr msg) {
+    if (is_high_priority_active()) {
+        RCLCPP_WARN(this->get_logger(), "🗑️ Waste full ignored (high priority active)");
+        return;
+    }
+
     std::string requested_room = msg->data;
     RCLCPP_INFO(this->get_logger(), "🚨 [D435] %s 쓰레기통 Full!", requested_room.c_str());
 
@@ -300,7 +419,7 @@ void HospitalTaskManager::waste_full_callback(const std_msgs::msg::String::Share
 
     if (room_map_.find(requested_room) != room_map_.end()) {
         std::string best_robot = select_best_robot(requested_room, false);
-        send_nav_goal(best_robot, requested_room, false);
+        go_to_with_routing(best_robot, requested_room);  // [v6.3] 경유지 적용
     }
 }
 
@@ -310,7 +429,6 @@ void HospitalTaskManager::patrol_scheduler() {
     if (now - last_patrol_time < std::chrono::seconds(10)) return;
     if (fleet_status_["robot_1"].is_busy || fleet_status_["robot_2"].is_busy) return;
 
-    // 배터리 높은 로봇 선택
     std::string patrol_robot = (fleet_status_["robot_1"].battery_level >= fleet_status_["robot_2"].battery_level)
                                 ? "robot_1" : "robot_2";
     RCLCPP_INFO(this->get_logger(), "🔄 Patrol start: %s (Battery: %.1f%%)",
@@ -324,22 +442,29 @@ void HospitalTaskManager::patrol_scheduler() {
 
 // 도착 후 시나리오 분기
 void HospitalTaskManager::process_arrival_logic(std::string robot_id, std::string room_id) {
-    // 현재 위치 업데이트
     if (robot_id == "robot_1") current_r1_location = room_id;
     else                        current_r2_location = room_id;
 
-    // [v6.1] robot_id 기준 복귀 스테이션 결정
     std::string my_station = (robot_id == "robot_1") ? "S1" : "S2";
 
-    // 1. 순찰 경로 진행
+    // [v6.3] 웨이포인트 큐에 다음 목적지가 있으면 이동
+    if (!waypoint_queues_[robot_id].empty()) {
+        std::string next_wp = waypoint_queues_[robot_id].front();
+        waypoint_queues_[robot_id].pop_front();
+        RCLCPP_INFO(this->get_logger(), "📍 %s 경유 완료 → %s 이동", room_id.c_str(), next_wp.c_str());
+        send_nav_goal(robot_id, next_wp, false);
+        return;
+    }
+
+    // 큐가 비어있으면 최종 목적지 도착 → 태스크별 처리
+
+    // 1. 순찰 경로 진행 (patrol_route 배열 기반, 자체 경유지 포함)
     if (current_task_type == "PATROL" && robot_id == patrol_robot_id_) {
         if (room_id == "waste") {
-            // 순찰 마지막 웨이포인트(waste) 도착 → 스테이션 복귀
             RCLCPP_INFO(this->get_logger(), "✅ 순찰 완료. %s 복귀.", my_station.c_str());
             current_task_type = "IDLE";
             send_nav_goal(robot_id, my_station, false);
         } else {
-            // 다음 웨이포인트로 이동
             patrol_index_++;
             if (patrol_index_ < (int)patrol_route_.size()) {
                 RCLCPP_INFO(this->get_logger(), "🔄 순찰 중 → %s", patrol_route_[patrol_index_].c_str());
@@ -349,32 +474,28 @@ void HospitalTaskManager::process_arrival_logic(std::string robot_id, std::strin
         return;
     }
 
-    // 2. 약 배송: phar 도착 → 환자 방으로 출발
+    // 2. [v6.3] 낙상 의심 탐색: 목적지 도착 → 20초 회전 탐색
+    if (current_task_type == "FALL_CHECK" && (room_id == "101" || room_id == "102")) {
+        start_scan_rotation(robot_id);
+        return;
+    }
+
+    // 3. 약 배송: phar 도착 → 환자 방으로 출발 (경유지 적용)
     if (current_task_type == "MEDICINE" && room_id == "phar") {
         RCLCPP_INFO(this->get_logger(), "💊 약 수령 완료. %s으로 출발.", next_goal_after_arrival.c_str());
         std::string final_dest = next_goal_after_arrival;
         next_goal_after_arrival = "";
-        send_nav_goal(robot_id, final_dest, false);
+        go_to_with_routing(robot_id, final_dest);
         return;
     }
 
-    // 3. 약 배송: 환자 방 도착 → TTS 후 스테이션 복귀
+    // 4. 약 배송: 환자 방 도착 → TTS 후 스테이션 복귀
     if (current_task_type == "MEDICINE" && (room_id == "101" || room_id == "102")) {
         auto tts_msg = std_msgs::msg::String();
         tts_msg.data = room_id;
         tts_trigger->publish(tts_msg);
         current_task_type = "IDLE";
-        send_nav_goal(robot_id, my_station, false);
-        return;
-    }
-
-    // 4. 다음 목적지 예약 있는 경우 (waste_full 등)
-    if (!next_goal_after_arrival.empty()) {
-        RCLCPP_INFO(this->get_logger(), "📍 %s 도착 → 예약 목적지 %s 이동.",
-                    room_id.c_str(), next_goal_after_arrival.c_str());
-        std::string final_dest = next_goal_after_arrival;
-        next_goal_after_arrival = "";
-        send_nav_goal(robot_id, final_dest, false);
+        go_to_with_routing(robot_id, my_station);
         return;
     }
 
@@ -382,7 +503,7 @@ void HospitalTaskManager::process_arrival_logic(std::string robot_id, std::strin
     if (room_id == "waste") {
         RCLCPP_INFO(this->get_logger(), "✅ 수거 완료. %s 복귀.", my_station.c_str());
         current_task_type = "IDLE";
-        send_nav_goal(robot_id, my_station, false);
+        go_to_with_routing(robot_id, my_station);
         return;
     }
 
@@ -390,21 +511,32 @@ void HospitalTaskManager::process_arrival_logic(std::string robot_id, std::strin
     if ((room_id == "S1" || room_id == "S2") && current_task_type == "IDLE") {
         RCLCPP_INFO(this->get_logger(), "🏠 %s 복귀 완료. 대기 모드.", my_station.c_str());
         fleet_status_[robot_id].is_busy = false;
-        // yolo_node / Qt GUI에 임무 없음 전달
         auto idle_task_msg = std_msgs::msg::String();
         idle_task_msg.data = "None";
         if (robot_id == "robot_1") r1_task_pub_->publish(idle_task_msg);
         else                        r2_task_pub_->publish(idle_task_msg);
-        // [v6.1] last_patrol_time 갱신 위치: 스테이션 복귀 완료 시점
         last_patrol_time = std::chrono::steady_clock::now();
         return;
     }
 
     // 7. 일반 호출 도착 → TTS trigger
-    auto tts_msg = std_msgs::msg::String();
-    tts_msg.data = room_id;
-    tts_trigger->publish(tts_msg);
-    robot1_is_interacting = (robot_id == "robot_1");
+    if (current_task_type == "CALL" && (room_id == "101" || room_id == "102")) {
+        auto tts_msg = std_msgs::msg::String();
+        tts_msg.data = room_id;
+        tts_trigger->publish(tts_msg);
+        robot1_is_interacting = (robot_id == "robot_1");
+        return;
+    }
+
+    // 8. TRASH_FULL: 방 도착 → waste로 이동
+    if (!next_goal_after_arrival.empty()) {
+        RCLCPP_INFO(this->get_logger(), "📍 %s 도착 → 예약 목적지 %s 이동.",
+                    room_id.c_str(), next_goal_after_arrival.c_str());
+        std::string final_dest = next_goal_after_arrival;
+        next_goal_after_arrival = "";
+        go_to_with_routing(robot_id, final_dest);
+        return;
+    }
 }
 
 int main(int argc, char **argv) {
