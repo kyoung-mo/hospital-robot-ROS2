@@ -88,17 +88,17 @@ HospitalTaskManager::HospitalTaskManager() : Node("hospital_task_manager") {
 
 // 4. room_map 좌표 (map 프레임 절대좌표)
     room_map_["phar"]         = {0.01,   0.01,  1.0};
-    room_map_["CORRIDOR_L"]   = {0.0,    0.0,   1.0}; 
+    room_map_["CORRIDOR_L"]   = {0.0,    0.0,   1.0};   // TODO: 왼쪽 복도 좌표 확정 필요
     room_map_["101"]          = {1.686, -0.663, 1.0};
     room_map_["CORRIDOR_MID"] = {2.030,  0.528, 1.0};
     room_map_["102"]          = {2.450, -0.546, 1.0};
-    room_map_["waste_front"]  = {4.649, -0.513, 1.0};   // [v6.3] 쓰레기장 앞 복도
+    room_map_["waste_front"]  = {4.928, -0.448, 1.0};   // [v6.3] 쓰레기장 앞 복도
     room_map_["waste"]        = {5.379,  1.027, 1.0};
     room_map_["S1"]           = {4.437, -0.969, 1.0};
     room_map_["S2"]           = {5.134, -0.996, 1.0};
 
 // 5. 순찰 경로 (waste_front 추가)
-    patrol_route_ = {"CORRIDOR_L", "CORRIDOR_MID", "101", "CORRIDOR_MID", "102", "CORRIDOR_MID", "waste_front", "waste", "waste_front"};
+    patrol_route_ = {"CORRIDOR_L", "101", "CORRIDOR_MID", "102", "CORRIDOR_MID", "waste_front", "waste"};
 
 // 6. 초기화
     waypoint_queues_["robot_1"] = std::deque<std::string>();
@@ -107,7 +107,7 @@ HospitalTaskManager::HospitalTaskManager() : Node("hospital_task_manager") {
     fleet_status_["robot_2"] = {false, "IDLE", "", 0.0f};
 
     last_patrol_time = std::chrono::steady_clock::now();
-    RCLCPP_INFO(this->get_logger(), "Hospital Task Manager v6.3 Started.");
+    RCLCPP_INFO(this->get_logger(), "Hospital Task Manager v6.4 Started.");
 }
 
 //-------------------------함수_정의-------------------------------//
@@ -175,7 +175,21 @@ void HospitalTaskManager::send_nav_goal(std::string robot_id, std::string room_i
     goal_msg.header.stamp = this->now();
     goal_msg.pose.position.x = room_map_[room_id][0];
     goal_msg.pose.position.y = room_map_[room_id][1];
-    goal_msg.pose.orientation.w = 1.0;
+
+    // [v6.4] 방별 도착 방향 설정 (벽면을 바라보도록)
+    // orientation: quaternion (x, y, z, w) - yaw 기준
+    // 101호: 방 안쪽(남쪽) 방향 → yaw = -90도 → z=-0.707, w=0.707
+    // 102호: 방 안쪽(남쪽) 방향 → yaw = -90도 → z=-0.707, w=0.707
+    // 그 외: 기본 방향 (w=1.0)
+    if (room_id == "101") {
+        goal_msg.pose.orientation.z = -0.707;
+        goal_msg.pose.orientation.w =  0.707;
+    } else if (room_id == "102") {
+        goal_msg.pose.orientation.z = -0.707;
+        goal_msg.pose.orientation.w =  0.707;
+    } else {
+        goal_msg.pose.orientation.w = 1.0;
+    }
 
     if (robot_id == "robot_1") r1_goal_pub_->publish(goal_msg);
     else                        r2_goal_pub_->publish(goal_msg);
@@ -239,15 +253,15 @@ void HospitalTaskManager::go_to_with_routing(std::string robot_id, std::string d
     }
 }
 
-// [v6.3] 낙상 탐색 회전 시작 (20초)
+// [v6.4] 낙상 탐색 회전 시작 (20초) - 속도 낮춤
 void HospitalTaskManager::start_scan_rotation(std::string robot_id) {
     scanning_robot_id_ = robot_id;
     current_task_type = "FALL_CHECK";
     RCLCPP_INFO(this->get_logger(), "🔄 [%s] 낙상 탐색 회전 시작 (20초)", robot_id.c_str());
 
-    // 회전 명령 발행
+    // [v6.4] 회전 속도 낮춤 (0.3 → 0.15) - 카메라 인식률 향상
     auto twist = geometry_msgs::msg::Twist();
-    twist.angular.z = 0.3;
+    twist.angular.z = 0.07;
     if (robot_id == "robot_1") r1_cmd_vel_pub_->publish(twist);
     // TODO: robot2 cmd_vel bridge 필요
 
@@ -428,6 +442,8 @@ void HospitalTaskManager::patrol_scheduler() {
     auto now = std::chrono::steady_clock::now();
     if (now - last_patrol_time < std::chrono::seconds(10)) return;
     if (fleet_status_["robot_1"].is_busy || fleet_status_["robot_2"].is_busy) return;
+    // [v6.4] 낙상 탐색/긴급 중이면 순찰 나가지 않음
+    if (is_high_priority_active()) return;
 
     std::string patrol_robot = (fleet_status_["robot_1"].battery_level >= fleet_status_["robot_2"].battery_level)
                                 ? "robot_1" : "robot_2";
