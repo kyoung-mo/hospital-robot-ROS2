@@ -63,9 +63,11 @@ private:
     void nav_result_callback(const GoalHandleNav::WrappedResult & result, std::string robot_id, std::string room_id);
 
     // 구독자, 퍼블리셔 멤버 변수
-    rclcpp::Subscription<std_msgs::msg::String>::SharedPtr emergency_sub_;
+    rclcpp::Subscription<std_msgs::msg::String>::SharedPtr emergency_sub_room1_;
+    rclcpp::Subscription<std_msgs::msg::String>::SharedPtr emergency_sub_room2_;
     rclcpp::Subscription<std_msgs::msg::String>::SharedPtr suspected_sub_;
-    rclcpp::Subscription<std_msgs::msg::String>::SharedPtr normal_call_sub_;
+    rclcpp::Subscription<std_msgs::msg::String>::SharedPtr normal_call_sub_room1_;
+    rclcpp::Subscription<std_msgs::msg::String>::SharedPtr normal_call_sub_room2_;
     rclcpp::Subscription<std_msgs::msg::String>::SharedPtr medicine_sub_;
     rclcpp::Subscription<std_msgs::msg::String>::SharedPtr waste_takeout_sub_;
     rclcpp::Subscription<std_msgs::msg::String>::SharedPtr waste_full_sub_;
@@ -75,8 +77,8 @@ private:
     rclcpp::Publisher<std_msgs::msg::String>::SharedPtr tts_trigger; // 도착 후 TTS 실행 [cite: 141]
     rclcpp::Publisher<std_msgs::msg::String>::SharedPtr emergency_event; // micro-ROS LED 제어 [cite: 140]
     
-    //rclcpp_action::Client<NavigateToPose>::SharedPtr r1_nav_client_, r2_nav_client_; //->Action 기반
     rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr r1_goal_pub_, r2_goal_pub_; //->Topic 기반
+    rclcpp::Publisher<std_msgs::msg::String>::SharedPtr r1_task_pub_, r2_task_pub_;
     
     // 데이터 관리
     std::map<std::string, std::vector<double>> room_map_;
