@@ -54,6 +54,7 @@ private:
     double r1y = -0.969;
     QString r1Target = "IDLE";
     std::vector<Point> r1PatrolPath;
+    std::vector<Point> r1TrailPath;  // 실시간 이동 궤적
     int r1PatrolIdx = 0;
     bool r1IsPatrolling = false;
 
@@ -62,8 +63,11 @@ private:
     double r2y = -0.969;
     QString r2Target = "IDLE";
     std::vector<Point> r2PatrolPath;
+    std::vector<Point> r2TrailPath;  // 실시간 이동 궤적
     int r2PatrolIdx = 0;
     bool r2IsPatrolling = false;
+
+    static constexpr int MAX_TRAIL_SIZE = 300;
 
     bool isDrawingMode = false;
 

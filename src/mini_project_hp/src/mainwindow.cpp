@@ -155,7 +155,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
         drawBtn->setText(isDrawingMode ? "✅ 편집 완료" : "🖊️ 경로 편집");
     });
     connect(clearBtn, &QPushButton::clicked, this, [=](){
-        if(selectedRobotId == 1) r1PatrolPath.clear(); else r2PatrolPath.clear();
+        if(selectedRobotId == 1) { r1PatrolPath.clear(); r1TrailPath.clear(); }
+        else { r2PatrolPath.clear(); r2TrailPath.clear(); }
         drawMap();
     });
     connect(patrolBtn, &QPushButton::clicked, this, &MainWindow::onPatrolButtonClicked);
@@ -268,6 +269,23 @@ void MainWindow::drawMap() {
     drawPath(r1PatrolPath, QColor("#0D9488"));
     drawPath(r2PatrolPath, QColor("#2563EB"));
 
+    // 실시간 이동 궤적 그리기
+    auto drawTrail = [&](std::vector<Point>& trail, QColor color) {
+        if (trail.size() < 2) return;
+        int total = (int)trail.size();
+        for (int i = 1; i < total; i++) {
+            float alpha = 60.0f + 195.0f * ((float)i / total);
+            QColor c = color;
+            c.setAlpha((int)alpha);
+            painter.setPen(QPen(c, 2.5, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+            QPointF p0 = mapToPixel(trail[i-1].x, trail[i-1].y, scaledMap.width(), scaledMap.height());
+            QPointF p1 = mapToPixel(trail[i].x, trail[i].y, scaledMap.width(), scaledMap.height());
+            painter.drawLine(p0, p1);
+        }
+    };
+    drawTrail(r1TrailPath, QColor("#0D9488"));
+    drawTrail(r2TrailPath, QColor("#2563EB"));
+
     QPointF p1 = mapToPixel(r1x, r1y, scaledMap.width(), scaledMap.height());
     painter.setBrush(QColor("#0D9488")); painter.drawEllipse(p1, 8, 8);
     painter.drawText(p1 + QPointF(10, 0), "R1");
@@ -283,6 +301,12 @@ void MainWindow::drawMap() {
 void MainWindow::handlePose(int id, double x, double y) {
     if (id == 1) {
         r1x = x; r1y = y;
+        if (r1TrailPath.empty() ||
+            std::sqrt(std::pow(x - r1TrailPath.back().x, 2) + std::pow(y - r1TrailPath.back().y, 2)) > 0.05) {
+            r1TrailPath.push_back({x, y});
+            if ((int)r1TrailPath.size() > MAX_TRAIL_SIZE)
+                r1TrailPath.erase(r1TrailPath.begin());
+        }
         r1Status->setText(QString("상태: %1\n좌표: (%2, %3)").arg(getRobotStatusText(r1Target)).arg(x, 0, 'f', 2).arg(y, 0, 'f', 2));
         if (r1IsPatrolling && r1Target == "PATROL") {
             double tx = r1PatrolPath[r1PatrolIdx].x; double ty = r1PatrolPath[r1PatrolIdx].y;
@@ -293,6 +317,12 @@ void MainWindow::handlePose(int id, double x, double y) {
         }
     } else if (id == 2) {
         r2x = x; r2y = y;
+        if (r2TrailPath.empty() ||
+            std::sqrt(std::pow(x - r2TrailPath.back().x, 2) + std::pow(y - r2TrailPath.back().y, 2)) > 0.05) {
+            r2TrailPath.push_back({x, y});
+            if ((int)r2TrailPath.size() > MAX_TRAIL_SIZE)
+                r2TrailPath.erase(r2TrailPath.begin());
+        }
         r2Status->setText(QString("상태: %1\n좌표: (%2, %3)").arg(getRobotStatusText(r2Target)).arg(x, 0, 'f', 2).arg(y, 0, 'f', 2));
         if (r2IsPatrolling && r2Target == "PATROL") {
             double tx = r2PatrolPath[r2PatrolIdx].x; double ty = r2PatrolPath[r2PatrolIdx].y;
