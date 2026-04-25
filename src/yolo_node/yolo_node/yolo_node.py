@@ -28,7 +28,7 @@ class PoseNode(Node):
         self.current_location = "Corridor"
         self.latest_frame = None
         self.last_publish_time = 0
-        self.emergency_sent = False  # ✅ 중복 발행 방지 플래그 추가
+        self.emergency_sent = False
         self.lock = threading.Lock()
 
         # 4. QoS 설정
@@ -94,40 +94,42 @@ class PoseNode(Node):
                 continue
 
             try:
-                results = self.model.predict(frame, verbose=False, device=0)
+                # conf=0.35 이상인 객체만 감지
+                results = self.model.predict(frame, verbose=False, device=0, conf=0.35)
                 annotated_frame = frame.copy()
-                
-                fall_detected_in_frame = False # 이번 프레임에서 낙상이 있는지 확인용
+
+                fall_detected_in_frame = False
 
                 for r in results:
                     annotated_frame = r.plot()
-                    if r.keypoints is None: continue
+                    if r.keypoints is None:
+                        continue
 
                     keypoints = r.keypoints.xy.cpu().numpy()
+
                     for person in keypoints:
-                        if len(person) < 17: continue
+                        if len(person) < 17:
+                            continue
 
                         # 낙상 판별 (머리와 골반의 높이 차이)
                         head_y = person[0][1]
                         hip_y = (person[11][1] + person[12][1]) / 2
                         height_diff = abs(head_y - hip_y)
 
-                        # 임계값: 너무 작으면 누워있는 것으로 판단
                         if 0.1 < height_diff < 30.0:
                             fall_detected_in_frame = True
-                            
+
                             now = time.time()
-                            # ✅ 수정: 아직 안 보냈고, 마지막 보낸지 3초가 넘었을 때만 실행
                             if not self.emergency_sent and (now - self.last_publish_time > 3.0):
                                 msg_out = String()
                                 msg_out.data = self.current_location
                                 self.fall_pub.publish(msg_out)
-                                
-                                self.emergency_sent = True # ✅ 보냈음 상태로 변경
+
+                                self.emergency_sent = True
                                 self.last_publish_time = now
                                 self.get_logger().error(f"🚨 [FALL DETECTED] at {self.current_location} - Signal Sent")
 
-                # ✅ 이번 프레임에 낙상 대상이 없으면 상태 리셋 (다시 보낼 수 있게 준비)
+                # 낙상 대상 없으면 상태 리셋
                 if not fall_detected_in_frame:
                     if self.emergency_sent:
                         self.get_logger().info(f"✅ Fall Situation Cleared at {self.current_location}")
@@ -137,9 +139,9 @@ class PoseNode(Node):
                 display_text = f"[{self.robot_id}] LOC: {self.current_location}"
                 if self.emergency_sent:
                     display_text += " | STATE: EMERGENCY"
-                    cv2.rectangle(annotated_frame, (0,0), (640, 480), (0,0,255), 10) # 감지 시 빨간 테두리
-                
-                cv2.putText(annotated_frame, display_text, (20, 45), 
+                    cv2.rectangle(annotated_frame, (0, 0), (640, 480), (0, 0, 255), 10)
+
+                cv2.putText(annotated_frame, display_text, (20, 45),
                             cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 255), 2)
 
                 # 시각화 영상 퍼블리시
