@@ -46,6 +46,7 @@ private:
 
     // [v6.3] 신규 함수
     bool is_high_priority_active();
+    bool is_robot_high_priority(const std::string& robot_id);  // [v6.6]
     void send_nav_sequence(std::string robot_id, std::vector<std::string> waypoints, bool is_emergency = false);
     void go_to_with_routing(std::string robot_id, std::string destination);
     void start_scan_rotation(std::string robot_id);
@@ -65,6 +66,8 @@ private:
     std::string patrol_robot_id_ = "";
     bool patrol_turn_ = false;
     std::map<std::string, std::map<std::string, std::vector<double>>> robot_route_maps_;
+
+
 
     // 긴급 상황
     bool buzzer_active_ = false;

@@ -113,14 +113,25 @@ HospitalTaskManager::HospitalTaskManager() : Node("hospital_task_manager") {
     fleet_status_["robot_2"] = {false, "IDLE", "", 0.0f};
 
     last_patrol_time = std::chrono::steady_clock::now();
-    RCLCPP_INFO(this->get_logger(), "Hospital Task Manager v6.5 Started.");
+    RCLCPP_INFO(this->get_logger(), "Hospital Task Manager v6.6 Started.");
 }
 
 //-------------------------함수_정의-------------------------------//
 
-// 우선순위 높은 태스크 중인지 확인
+// [v6.6] 전체 우선순위 높은 태스크 중인지 확인 (EMERGENCY_WAIT만 전역 차단)
 bool HospitalTaskManager::is_high_priority_active() {
-    return current_task_type == "EMERGENCY_WAIT" || current_task_type == "FALL_CHECK";
+    return current_task_type == "EMERGENCY_WAIT";
+}
+
+// [v6.6] 특정 로봇이 고우선순위 중인지 확인
+bool HospitalTaskManager::is_robot_high_priority(const std::string& robot_id) {
+    if (current_task_type == "EMERGENCY_WAIT") return true;
+    if (current_task_type == "FALL_CHECK" && robot_id == scanning_robot_id_) return true;
+    if (current_task_type == "FALL_CHECK" && fleet_status_[robot_id].is_busy) {
+        // 해당 로봇이 FALL_CHECK 임무를 수행 중인지 확인
+        return (robot_id == patrol_robot_id_ || scanning_robot_id_ == robot_id);
+    }
+    return false;
 }
 
 // [v6.5] 방 번호에 따라 emergency_event 발행 - 101/102만 발행, 복도는 무시
@@ -161,7 +172,7 @@ void HospitalTaskManager::check_arrival(std::string robot_id, geometry_msgs::msg
     }
 
     double dist = calculate_distance(current_pose, coords);
-    if (dist < 0.35) {
+    if (dist < 0.50) {  // [v6.6] 임계값 확대 (35cm→50cm, bridge 지연 대응)
         RCLCPP_INFO(this->get_logger(), "📍 %s reached %s.", robot_id.c_str(), target.c_str());
         fleet_status_[robot_id].is_busy = false;
         fleet_status_[robot_id].target_room = "";
@@ -338,6 +349,11 @@ void HospitalTaskManager::stop_scan_rotation() {
 
 // 낙상 확정: 그 자리 정지 + 부저
 void HospitalTaskManager::emergency_callback(const std_msgs::msg::String::SharedPtr msg) {
+    // [v6.6] 101/102가 아닌 위치 무시 (복도/스테이션 오발행 방지)
+    if (msg->data != "101" && msg->data != "102") {
+        RCLCPP_WARN(this->get_logger(), "⚠️ EMERGENCY 무시 (유효하지 않은 위치): %s", msg->data.c_str());
+        return;
+    }
     if (buzzer_active_) return;
     if (last_emergency_room == msg->data && fleet_status_["robot_1"].is_busy) return;
 
@@ -390,8 +406,15 @@ void HospitalTaskManager::suspected_callback(const std_msgs::msg::String::Shared
         return;
     }
 
-    // [v6.3] 두 로봇 다 바빠도 가장 가까운 로봇 강제 파견
+    // [v6.6] 놀고있는 로봇 우선, 없으면 가장 가까운 로봇 파견
     std::string target_robot = select_best_robot(msg->data, true);
+
+    // 이미 선택된 로봇이 FALL_CHECK 중이면 다른 로봇 선택
+    if (current_task_type == "FALL_CHECK" && fleet_status_[target_robot].is_busy) {
+        target_robot = (target_robot == "robot_1") ? "robot_2" : "robot_1";
+        RCLCPP_WARN(this->get_logger(), "⚠️ 선택 로봇 바쁨 → %s로 변경", target_robot.c_str());
+    }
+
     RCLCPP_WARN(this->get_logger(), "⚠️ Fall Suspected (D435): %s → %s 파견",
                 msg->data.c_str(), target_robot.c_str());
 
