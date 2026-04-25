@@ -98,7 +98,7 @@ HospitalTaskManager::HospitalTaskManager() : Node("hospital_task_manager") {
     room_map_["S2"]           = {5.134, -0.996, 1.0};
 
 // 5. 순찰 경로 (waste_front 추가)
-    patrol_route_ = {"CORRIDOR_L", "101", "CORRIDOR_MID", "102", "CORRIDOR_MID", "waste_front", "waste"};
+    patrol_route_ = {"CORRIDOR_L", "CORRIDOR_MID", "101", "CORRIDOR_MID", "102", "CORRIDOR_MID", "waste_front", "waste", "waste_front"};
 
 // 6. 초기화
     waypoint_queues_["robot_1"] = std::deque<std::string>();
