@@ -91,14 +91,16 @@ HospitalTaskManager::HospitalTaskManager() : Node("hospital_task_manager") {
     r1_wp_map_["CORRIDOR_MID"] = {2.420,  0.510};
     r1_wp_map_["waste_front"]  = {4.827, -0.662};  // 미실측, 기존값 유지
 
-    // Robot2 경유지 (실측)
-    r2_wp_map_["CORRIDOR_L"]   = {0.512,  0.787};
-    r2_wp_map_["CORRIDOR_MID"] = {1.705,  0.594};
-    r2_wp_map_["waste_front"]  = {3.687, -0.007};
+    // Robot2 경유지 + 방 좌표 (Robot1과 접근 경로 다름)
+    r2_wp_map_["CORRIDOR_MID"]  = {2.377,  0.437};  // 101 앞뒤 복도 (평균)
+    r2_wp_map_["CORRIDOR_MID2"] = {1.642,  0.454};  // 102 앞뒤 복도 (평균)
+    r2_wp_map_["CORRIDOR_L"]    = {0.428,  0.467};  // 왼쪽 복도
+    r2_wp_map_["waste_front"]   = {3.585,  0.531};  // 쓰레기 앞
+    r2_wp_map_["101"]           = {2.370, -0.601};  // Robot2 기준 101호
+    r2_wp_map_["102"]           = {1.702, -0.677};  // Robot2 기준 102호
 
-// 4. Robot2 순찰 경로 (실측 좌표 기반, 한 바퀴)
-    // CORRIDOR_L(0.512, 0.787) → 102(-0.687) → CORRIDOR_MID(1.705) → 101(-0.665) → CORRIDOR_MID → waste_front(3.687) → waste(5.441)
-    r2_patrol_route_ = {"CORRIDOR_L", "102", "CORRIDOR_MID", "101", "CORRIDOR_MID", "waste_front", "waste"};
+// 4. Robot2 순찰 경로 (101 → 102 → 복도 → S2 복귀, 쓰레기장 미경유)
+    r2_patrol_route_ = {"CORRIDOR_MID", "101", "CORRIDOR_MID", "CORRIDOR_MID2", "102", "CORRIDOR_MID2", "CORRIDOR_L", "waste_front", "S2"};
 
 // 5. 상태 초기화
     r1_task_type_     = "IDLE";
@@ -342,8 +344,9 @@ void HospitalTaskManager::process_r1_arrival(const std::string& room_id) {
 void HospitalTaskManager::process_r2_arrival(const std::string& room_id) {
     r2_current_loc_ = room_id;
 
+    // 순찰 종료: S2 도착
     if (room_id == "S2") {
-        RCLCPP_INFO(this->get_logger(), "🏠 [Robot2] 순찰 종료. 대기.");
+        RCLCPP_INFO(this->get_logger(), "🏠 [Robot2] 순찰 종료. S2 대기.");
         r2_patrol_active_ = false;
         auto idle_msg = std_msgs::msg::String();
         idle_msg.data = "None";
@@ -351,12 +354,7 @@ void HospitalTaskManager::process_r2_arrival(const std::string& room_id) {
         return;
     }
 
-    if (room_id == "waste") {
-        RCLCPP_INFO(this->get_logger(), "✅ [Robot2] 순찰 완료 → S2 복귀");
-        send_r2_goal("S2");
-        return;
-    }
-
+    // 다음 순찰 웨이포인트
     r2_patrol_index_++;
     if (r2_patrol_index_ < (int)r2_patrol_route_.size()) {
         RCLCPP_INFO(this->get_logger(), "🔄 [Robot2] → %s", r2_patrol_route_[r2_patrol_index_].c_str());
@@ -409,11 +407,15 @@ void HospitalTaskManager::normal_call_callback(const std_msgs::msg::String::Shar
 }
 
 void HospitalTaskManager::medicine_callback(const std_msgs::msg::String::SharedPtr msg) {
+    (void)msg;
     if (buzzer_active_) { RCLCPP_WARN(this->get_logger(), "💊 약 요청 무시 (긴급 중)"); return; }
 
-    RCLCPP_INFO(this->get_logger(), "💊 약 요청 [%s] → phar 경유", msg->data.c_str());
+    // whisper_node가 "medicine" 키워드를 발행하므로
+    // 복귀 목적지는 Robot1이 현재 있는 방(r1_current_loc_)으로 설정
+    std::string target_room = r1_current_loc_;
+    RCLCPP_INFO(this->get_logger(), "💊 약 요청 → phar 경유 후 [%s] 복귀", target_room.c_str());
     r1_task_type_ = "MEDICINE";
-    r1_next_goal_ = msg->data;
+    r1_next_goal_ = target_room;
     r1_wp_queue_.clear();
     send_r1_goal("phar");
 }
