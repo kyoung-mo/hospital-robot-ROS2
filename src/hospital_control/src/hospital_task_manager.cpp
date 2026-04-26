@@ -80,21 +80,24 @@ HospitalTaskManager::HospitalTaskManager() : Node("hospital_task_manager") {
     r2_task_pub_           = this->create_publisher<std_msgs::msg::String>("/robot2/task_assignment", 10);
 
 // 3. 좌표 맵 (101/102 micro-ROS 설치 반전 반영)
-    room_map_["phar"]  = {0.01,   0.01};
-    room_map_["102"]   = {1.686, -0.663};
-    room_map_["101"]   = {2.450, -0.546};
-    room_map_["waste"] = {5.379,  1.027};
-    room_map_["S1"]    = {4.437, -0.969};
-    room_map_["S2"]    = {5.134, -0.996};
+    room_map_["phar"]  = {0.155,  0.115};   // 약 수령 위치 (실측)
+    room_map_["102"]   = {2.428, -0.717};   // 방1 실제 위치 (Robot1 시나리오 기준)
+    room_map_["101"]   = {2.388, -0.613};   // 방2 실제 위치
+    room_map_["waste"] = {5.441,  0.853};   // 쓰레기장 (실측)
+    room_map_["S1"]    = {4.500, -1.121};   // Robot1 스테이션 (실측)
+    room_map_["S2"]    = {5.153, -1.073};   // Robot2 스테이션 (실측)
 
-    r1_wp_map_["CORRIDOR_MID"] = {1.737,  0.636};
-    r1_wp_map_["waste_front"]  = {4.827, -0.662};
+    // Robot1 경유지 (실측)
+    r1_wp_map_["CORRIDOR_MID"] = {2.420,  0.510};
+    r1_wp_map_["waste_front"]  = {4.827, -0.662};  // 미실측, 기존값 유지
 
-    r2_wp_map_["CORRIDOR_L"]   = {-0.208, -0.471};
-    r2_wp_map_["CORRIDOR_MID"] = { 2.314,  0.321};
-    r2_wp_map_["waste_front"]  = { 3.745, -0.580};
+    // Robot2 경유지 (실측)
+    r2_wp_map_["CORRIDOR_L"]   = {0.512,  0.787};
+    r2_wp_map_["CORRIDOR_MID"] = {1.705,  0.594};
+    r2_wp_map_["waste_front"]  = {3.687, -0.007};
 
-// 4. Robot2 순찰 경로
+// 4. Robot2 순찰 경로 (실측 좌표 기반, 한 바퀴)
+    // CORRIDOR_L(0.512, 0.787) → 102(-0.687) → CORRIDOR_MID(1.705) → 101(-0.665) → CORRIDOR_MID → waste_front(3.687) → waste(5.441)
     r2_patrol_route_ = {"CORRIDOR_L", "102", "CORRIDOR_MID", "101", "CORRIDOR_MID", "waste_front", "waste"};
 
 // 5. 상태 초기화
