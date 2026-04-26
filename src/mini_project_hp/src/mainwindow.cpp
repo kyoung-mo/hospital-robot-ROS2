@@ -195,6 +195,7 @@ void MainWindow::onRoomButtonClicked() {
     QString roomText = btn->text();
     QString targetRoom = "";
 
+    // 1. 버튼 텍스트에서 목적지 ID 추출
     if (roomText.contains("101")) targetRoom = "101";
     else if (roomText.contains("102")) targetRoom = "102";
     else if (roomText.contains("S1")) targetRoom = "S1";
@@ -202,16 +203,31 @@ void MainWindow::onRoomButtonClicked() {
     else if (roomText.contains("START")) targetRoom = "START";
     else if (roomText.contains("waste")) targetRoom = "waste";
 
-    if (selectedRobotId == 1) {
-        r1Target = targetRoom;
-        if (roomText.contains("약")) rosThread->publishMedicineRequest(targetRoom);
-        else rosThread->publishCall(targetRoom);
-        addLog(QString("로봇 1 -> %1 이동 명령").arg(targetRoom), 1);
-    } else {
-        r2Target = targetRoom;
-        if (roomText.contains("약")) rosThread->publishMedicineRequest(targetRoom);
-        else rosThread->publishCall(targetRoom);
-        addLog(QString("로봇 2 -> %1 이동 명령").arg(targetRoom), 2);
+    if (targetRoom.isEmpty()) return;
+
+    // 2. 임무 유형에 따른 로직 분기
+    if (roomText.contains("약")) {
+        // [v6.3] 약 배송 요청 (TaskManager의 medicine_callback 트리거)
+        rosThread->publishMedicineRequest(targetRoom);
+        addLog(QString("시스템: %1번 방으로 약 배송 요청 송신").arg(targetRoom), 0);
+    }
+    else if (roomText.contains("호출")) {
+        // [v6.3 핵심 변경] 통합 publishCall이 아닌 방별 세분화 토픽으로 발행
+        // ros_thread 내부에서 101/102를 판단하여 room1/room2 토픽으로 분기함
+        rosThread->publishCall(targetRoom);
+        addLog(QString("시스템: %1번 방 일반 호출 신호 송신").arg(targetRoom), 0);
+    }
+    else {
+        // 스테이션 복귀나 폐기물 수거 등 일반 이동은 선택된 로봇에게 직접 명령
+        if (selectedRobotId == 1) {
+            r1Target = targetRoom;
+            rosThread->sendGoalPose(1, getCoord(targetRoom).x, getCoord(targetRoom).y);
+            addLog(QString("로봇 1 -> %1 강제 이동 명령").arg(targetRoom), 1);
+        } else {
+            r2Target = targetRoom;
+            rosThread->sendGoalPose(2, getCoord(targetRoom).x, getCoord(targetRoom).y);
+            addLog(QString("로봇 2 -> %1 강제 이동 명령").arg(targetRoom), 2);
+        }
     }
 }
 
@@ -301,41 +317,35 @@ void MainWindow::drawMap() {
 void MainWindow::handlePose(int id, double x, double y) {
     if (id == 1) {
         r1x = x; r1y = y;
-        if (r1TrailPath.empty() ||
-            std::sqrt(std::pow(x - r1TrailPath.back().x, 2) + std::pow(y - r1TrailPath.back().y, 2)) > 0.05) {
+        // 궤적(Trail) 저장 로직: 이동 거리가 일정 이상일 때만 저장
+        if (r1TrailPath.empty() || std::sqrt(std::pow(x - r1TrailPath.back().x, 2) +
+                                             std::pow(y - r1TrailPath.back().y, 2)) > 0.05) {
             r1TrailPath.push_back({x, y});
-            if ((int)r1TrailPath.size() > MAX_TRAIL_SIZE)
-                r1TrailPath.erase(r1TrailPath.begin());
-        }
-        r1Status->setText(QString("상태: %1\n좌표: (%2, %3)").arg(getRobotStatusText(r1Target)).arg(x, 0, 'f', 2).arg(y, 0, 'f', 2));
-        if (r1IsPatrolling && r1Target == "PATROL") {
-            double tx = r1PatrolPath[r1PatrolIdx].x; double ty = r1PatrolPath[r1PatrolIdx].y;
-            if (std::sqrt(std::pow(tx - x, 2) + std::pow(ty - y, 2)) < 0.3) {
-                r1PatrolIdx = (r1PatrolIdx + 1) % (int)r1PatrolPath.size();
-                rosThread->sendGoalPose(1, r1PatrolPath[r1PatrolIdx].x, r1PatrolPath[r1PatrolIdx].y);
-            }
+            if (r1TrailPath.size() > MAX_TRAIL_SIZE) r1TrailPath.erase(r1TrailPath.begin());
         }
     } else if (id == 2) {
         r2x = x; r2y = y;
-        if (r2TrailPath.empty() ||
-            std::sqrt(std::pow(x - r2TrailPath.back().x, 2) + std::pow(y - r2TrailPath.back().y, 2)) > 0.05) {
+        if (r2TrailPath.empty() || std::sqrt(std::pow(x - r2TrailPath.back().x, 2) +
+                                             std::pow(y - r2TrailPath.back().y, 2)) > 0.05) {
             r2TrailPath.push_back({x, y});
-            if ((int)r2TrailPath.size() > MAX_TRAIL_SIZE)
-                r2TrailPath.erase(r2TrailPath.begin());
-        }
-        r2Status->setText(QString("상태: %1\n좌표: (%2, %3)").arg(getRobotStatusText(r2Target)).arg(x, 0, 'f', 2).arg(y, 0, 'f', 2));
-        if (r2IsPatrolling && r2Target == "PATROL") {
-            double tx = r2PatrolPath[r2PatrolIdx].x; double ty = r2PatrolPath[r2PatrolIdx].y;
-            if (std::sqrt(std::pow(tx - x, 2) + std::pow(ty - y, 2)) < 0.3) {
-                r2PatrolIdx = (r2PatrolIdx + 1) % (int)r2PatrolPath.size();
-                rosThread->sendGoalPose(2, r2PatrolPath[r2PatrolIdx].x, r2PatrolPath[r2PatrolIdx].y);
-            }
+            if (r2TrailPath.size() > MAX_TRAIL_SIZE) r2TrailPath.erase(r2TrailPath.begin());
         }
     }
+
+    // [중요] 좌표가 바뀔 때마다 drawMap()을 호출하여 로봇 아이콘을 움직임
+    drawMap();
 }
 
 void MainWindow::onTimerTick() { drawMap(); }
-void MainWindow::handleBattery(int id, float p) { if(id == 1) r1BattBar->setValue((int)p); else if(id == 2) r2BattBar->setValue((int)p); }
+void MainWindow::handleBattery(int id, float p) {
+    // percentage가 0.85와 같이 들어오는지, 85.0과 같이 들어오는지 확인이 필요합니다.
+    int val = static_cast<double>(p);
+    if (id == 1) r1BattBar->setValue(val);
+    else if (id == 2) r2BattBar->setValue(val);
+
+    // 값이 들어오는지 확인하기 위한 로그 추가
+    qDebug() << "Battery Received - ID:" << id << " Value:" << val;
+}
 void MainWindow::handleEvent(QString type, QString message) {
     QListWidgetItem *item = new QListWidgetItem(QString("[%1] %2: %3").arg(QTime::currentTime().toString("HH:mm:ss")).arg(type).arg(message));
     if (type.contains("긴급")) item->setForeground(Qt::red);

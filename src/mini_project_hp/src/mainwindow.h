@@ -28,7 +28,7 @@ protected:
 public slots:
     void updateCamera(int camId, QImage img);
     void handlePose(int id, double x, double y);
-    void handleBattery(int id, float percentage);
+    void handleBattery(int id, float p);
     void onRoomButtonClicked();
     void onPatrolButtonClicked();
     void onTimerTick();
