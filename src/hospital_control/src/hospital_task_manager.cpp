@@ -80,8 +80,8 @@ HospitalTaskManager::HospitalTaskManager() : Node("hospital_task_manager") {
 
 // 3. room_map 좌표
     room_map_["phar"]  = {0.01,   0.01,  1.0};
-    room_map_["101"]   = {1.686, -0.663, 1.0};
-    room_map_["102"]   = {2.450, -0.546, 1.0};
+    room_map_["102"]   = {1.686, -0.663, 1.0};
+    room_map_["101"]   = {2.450, -0.546, 1.0};
     room_map_["waste"] = {5.379,  1.027, 1.0};
     room_map_["S1"]    = {4.437, -0.969, 1.0};
     room_map_["S2"]    = {5.134, -0.996, 1.0};
@@ -96,7 +96,7 @@ HospitalTaskManager::HospitalTaskManager() : Node("hospital_task_manager") {
     robot_route_maps_["robot_2"]["waste_front"]  = { 3.745, -0.580, 1.0};
 
 // 4. 순찰 경로 (Robot2 전용, 한 바퀴)
-    patrol_route_ = {"CORRIDOR_L", "101", "CORRIDOR_MID", "102", "CORRIDOR_MID", "waste_front", "waste"};
+    patrol_route_ = {"CORRIDOR_L", "102", "CORRIDOR_MID", "101", "CORRIDOR_MID", "waste_front", "waste"};
 
 // 5. 초기화
     waypoint_queues_["robot_1"] = std::deque<std::string>();
@@ -128,10 +128,10 @@ bool HospitalTaskManager::is_high_priority_active() {
 void HospitalTaskManager::publish_emergency_event(const std::string& room_id, const std::string& event_type) {
     auto msg = std_msgs::msg::String();
     msg.data = event_type;
-    if (room_id == "101") {
+    if (room_id == "102") {
         emergency_event_room1_->publish(msg);
         RCLCPP_INFO(this->get_logger(), "💡 emergency_event/room1 → %s", event_type.c_str());
-    } else if (room_id == "102") {
+    } else if (room_id == "101") {
         emergency_event_room2_->publish(msg);
         RCLCPP_INFO(this->get_logger(), "💡 emergency_event/room2 → %s", event_type.c_str());
     }
@@ -183,7 +183,7 @@ void HospitalTaskManager::send_nav_goal(std::string robot_id, std::string room_i
     goal_msg.pose.position.x = coords[0];
     goal_msg.pose.position.y = coords[1];
 
-    if (room_id == "101" || room_id == "102") {
+    if (room_id == "102" || room_id == "101") {
         goal_msg.pose.orientation.z = -0.707;
         goal_msg.pose.orientation.w =  0.707;
     } else {
@@ -216,13 +216,13 @@ void HospitalTaskManager::go_to_with_routing(std::string robot_id, std::string d
     std::string current = (robot_id == "robot_1") ? current_r1_location : current_r2_location;
     std::vector<std::string> route;
 
-    if (current == "101" || current == "102") {
+    if (current == "102" || current == "101") {
         route.push_back("CORRIDOR_MID");
     } else if (current == "waste") {
         route.push_back("waste_front");
     }
 
-    if (destination == "101" || destination == "102") {
+    if (destination == "102" || destination == "101") {
         if (route.empty() || route.back() != "CORRIDOR_MID") {
             route.push_back("CORRIDOR_MID");
         }
@@ -245,7 +245,7 @@ void HospitalTaskManager::go_to_with_routing(std::string robot_id, std::string d
 
 // [시나리오 1] emergency → Robot1만, Robot2 무시
 void HospitalTaskManager::emergency_callback(const std_msgs::msg::String::SharedPtr msg) {
-    if (msg->data != "101" && msg->data != "102") return;
+    if (msg->data != "102" && msg->data != "101") return;
     if (buzzer_active_) return;
 
     RCLCPP_ERROR(this->get_logger(), "🚨 EMERGENCY: %s → Robot1 정지 + 부저", msg->data.c_str());
@@ -396,7 +396,7 @@ void HospitalTaskManager::process_arrival_logic(std::string robot_id, std::strin
     }
 
     // 2. 약 배송: 환자 방 도착 → TTS 후 S1 복귀
-    if (current_r1_task_type == "MEDICINE" && (room_id == "101" || room_id == "102")) {
+    if (current_r1_task_type == "MEDICINE" && (room_id == "102" || room_id == "101")) {
         RCLCPP_INFO(this->get_logger(), "💊 약 전달 완료. TTS 발행 → S1 복귀.");
         auto tts_msg = std_msgs::msg::String();
         tts_msg.data = room_id;
@@ -407,7 +407,7 @@ void HospitalTaskManager::process_arrival_logic(std::string robot_id, std::strin
     }
 
     // 3. 버튼 호출 도착 → TTS trigger (STT 인터랙션 시작)
-    if (current_r1_task_type == "CALL" && (room_id == "101" || room_id == "102")) {
+    if (current_r1_task_type == "CALL" && (room_id == "102" || room_id == "101")) {
         RCLCPP_INFO(this->get_logger(), "🔔 Robot1 도착 → TTS trigger 발행");
         auto tts_msg = std_msgs::msg::String();
         tts_msg.data = room_id;
