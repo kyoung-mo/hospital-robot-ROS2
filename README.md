@@ -1,4 +1,4 @@
-# 🏥 자율주행 기반 스마트 병동 관리 시스템
+ㄱ# 🏥 자율주행 기반 스마트 병동 관리 시스템
 
 > TurtleBot3 × 2 + Intel RealSense D435 + Arduino × 2 기반 자율 순찰 · 낙상 감지 · 음성 케어 로봇 시스템  
 > Intel AI SW Academy 9기 2차 팀 프로젝트 (2026.04)
