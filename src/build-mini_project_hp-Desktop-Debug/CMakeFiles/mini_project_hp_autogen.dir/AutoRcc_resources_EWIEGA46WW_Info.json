@@ -1,0 +1,19 @@
+{
+	"BUILD_DIR" : "/home/hospital/hospital-kym/src/build-mini_project_hp-Desktop-Debug/mini_project_hp_autogen",
+	"CMAKE_BINARY_DIR" : "/home/hospital/hospital-kym/src/build-mini_project_hp-Desktop-Debug",
+	"CMAKE_CURRENT_BINARY_DIR" : "/home/hospital/hospital-kym/src/build-mini_project_hp-Desktop-Debug",
+	"CMAKE_CURRENT_SOURCE_DIR" : "/home/hospital/hospital-kym/src/mini_project_hp",
+	"CMAKE_SOURCE_DIR" : "/home/hospital/hospital-kym/src/mini_project_hp",
+	"INCLUDE_DIR" : "/home/hospital/hospital-kym/src/build-mini_project_hp-Desktop-Debug/mini_project_hp_autogen/include",
+	"INPUTS" : [ "/home/hospital/hospital-kym/src/mini_project_hp/maps/newnew_map.png" ],
+	"LOCK_FILE" : "/home/hospital/hospital-kym/src/build-mini_project_hp-Desktop-Debug/CMakeFiles/mini_project_hp_autogen.dir/AutoRcc_resources_EWIEGA46WW_Lock.lock",
+	"MULTI_CONFIG" : false,
+	"OPTIONS" : [ "-name", "resources" ],
+	"OUTPUT_CHECKSUM" : "EWIEGA46WW",
+	"OUTPUT_NAME" : "qrc_resources.cpp",
+	"RCC_EXECUTABLE" : "/usr/lib/qt6/libexec/rcc",
+	"RCC_LIST_OPTIONS" : [ "--list" ],
+	"SETTINGS_FILE" : "/home/hospital/hospital-kym/src/build-mini_project_hp-Desktop-Debug/CMakeFiles/mini_project_hp_autogen.dir/AutoRcc_resources_EWIEGA46WW_Used.txt",
+	"SOURCE" : "/home/hospital/hospital-kym/src/mini_project_hp/resources.qrc",
+	"VERBOSITY" : 0
+}

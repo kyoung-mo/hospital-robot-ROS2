@@ -1,0 +1,4 @@
+source;share/mini_project_hp/local_setup.bash
+source;share/mini_project_hp/local_setup.dsv
+source;share/mini_project_hp/local_setup.sh
+source;share/mini_project_hp/local_setup.zsh

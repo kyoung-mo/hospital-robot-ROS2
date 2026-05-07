@@ -1,7 +1,8 @@
 devel/
 logs/
 build/
-bin/
+install/
+log/
 lib/
 msg_gen/
 srv_gen/
@@ -49,3 +50,10 @@ qtcreator-*
 
 # Catkin custom files
 CATKIN_IGNORE
+log/
+install/
+whisper/record/
+whisper/tts/
+build/
+install/
+log/
