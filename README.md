@@ -47,20 +47,41 @@
 
 ## 🚀 Quick Start
 
+### 관제 PC
 ```bash
-# 관제 PC - ROS2 환경 소싱
-source /opt/ros/humble/setup.bash
-source ~/hospital_robot_ws/install/setup.bash
+# GUI
+qtcreator
 
-# Domain Bridge 실행 (Robot2 통신)
-ros2 run domain_bridge domain_bridge --config bridge_config.yaml
+# micro-ROS agent (방 입구 OpenCR1)
+bash micro_ros_1.sh
+bash micro_ros_2.sh
 
-# micro-ROS agent 실행 (방 입구 OpenCR1 2개)
-ROS_DOMAIN_ID=5 ros2 run micro_ros_agent micro_ros_agent serial --dev /dev/ttyACM0 -b 115200
-ROS_DOMAIN_ID=5 ros2 run micro_ros_agent micro_ros_agent serial --dev /dev/ttyACM1 -b 115200
+# 음성 인터랙션
+bash whisper.sh
+bash tts_node.sh
 
-# 전체 시스템 실행
-ros2 launch hospital_task_manager hospital_bringup.launch.py
+# 자율주행 / 시스템
+bash domain_bridge.sh
+bash task_manager.sh
+bash d435.sh
+bash yolo_node1.sh    # robot_1
+bash yolo_node2.sh    # robot_2
+```
+
+### Robot1
+```bash
+bash bringup.sh
+bash navi_pj_2.sh
+bash picam.sh
+bash mic_node.sh
+bash tts_play_node.sh
+```
+
+### Robot2
+```bash
+bash bringup.sh
+bash navi.sh
+bash picam.sh
 ```
 
 ---
