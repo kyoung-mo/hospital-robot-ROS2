@@ -39,7 +39,7 @@
 
 - YOLO11n-pose pretrained 모델 기반 낙상 감지 (keypoint 분석)
 - Intel RealSense D435 탑뷰 이중 감지 구조 (낙상 의심 + 쓰레기통 모니터링)
-- Whisper tiny 한국어 STT 기반 음성 인터랙션
+- Whisper small 한국어 STT 기반 음성 인터랙션
 - micro-ROS 기반 버튼 호출 + LED 상태 표시
 - Nav2 + AMCL 자율주행 및 멀티 로봇 출동 판단
 
@@ -48,6 +48,7 @@
 ## 🚀 Quick Start
 
 ### 관제 PC
+
 ```bash
 # GUI
 qtcreator
@@ -69,6 +70,7 @@ bash yolo_node2.sh    # robot_2
 ```
 
 ### Robot1
+
 ```bash
 bash bringup.sh
 bash navi_pj_2.sh
@@ -78,6 +80,7 @@ bash tts_play_node.sh
 ```
 
 ### Robot2
+
 ```bash
 bash bringup.sh
 bash navi.sh
@@ -94,7 +97,7 @@ bash picam.sh
    ├── hospital_task_manager  (C++)
    ├── yolo_node              (Python)  ← YOLO11n-pose
    ├── d435_node              (Python)  ← RealSense D435
-   ├── whisper_node           (Python)  ← Whisper tiny STT
+   ├── whisper_node           (Python)  ← Whisper small STT
    ├── tts_node               (Python)  ← gTTS
    ├── gui_node               (C++/Qt6)
    ├── OpenCR1 (/dev/ttyACM0) ← 방1 버튼/LED/부저/LCD (micro-ROS)
@@ -160,7 +163,7 @@ D435 낙상 의심 (침대 ROI 깊이값 변화)
 환자 버튼 클릭 → 터틀봇1 병실 도착
     → "필요한 거 있으실까요?" TTS 재생 (~2초)
     → USB 마이크 녹음 (4초) → /robot_1/audio 발행
-    → Whisper tiny STT 변환
+    → Whisper small STT 변환
     → 키워드 매칭
         ├── "약" / "약 주세요"  → 간호사 스테이션 경유 → 약 수령 → 방 복귀 → TTS
         ├── "쓰레기"            → 쓰레기 수거장 이동
@@ -233,7 +236,7 @@ hospital_robot_ws/
 
 | 이름 | 역할 | 담당 영역 |
 |---|---|---|
-| 구영모 | PM · Field Interface | mic_node · whisper_node · tts_node · tts_play_node · button_led_node (micro-ROS) |
+| 구영모 | PM · Field Interface | mic_node · whisper_node · tts_node · tts_play_node · button_led_node (micro-ROS) · SLAM 맵핑 |
 | 안해성 | PL · System Integrator | hospital_task_manager · Nav2 · AMCL · 멀티로봇 출동 판단 |
 | 인수민 | Vision & Sensor | yolo_node (YOLO11n-pose) · d435_node (RealSense) |
-| 곽종현 | GUI & Mapping | gui_node (Qt6) · SLAM 맵핑 · 세트장 구성 · 통합 테스트 |
+| 곽종현 | GUI & Mapping | gui_node (Qt6) · 맵 수정(벽 확장) · 재맵핑 · 세트장 구성 |
